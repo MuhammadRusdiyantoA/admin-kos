@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'log_reg.dart';
+import 'onboarding.dart';
 
 void main() {
   runApp(const Root());
@@ -38,7 +38,7 @@ class _Splash extends State<Splash> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const Login(),
+            builder: (context) => const Onboard(),
           ),
         )
       },
