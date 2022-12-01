@@ -14,11 +14,11 @@ class HomeUser extends StatelessWidget {
             label: 'Beranda',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_filled),
+            icon: Icon(Icons.text_snippet_outlined),
             label: 'Tentang',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_filled),
+            icon: Icon(Icons.person_outline),
             label: 'Profil',
           ),
         ],
