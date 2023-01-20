@@ -11,6 +11,7 @@ class Login extends StatefulWidget {
 
 class _Login extends State<Login> {
   bool? check = false;
+  bool show = false;
 
   @override
   Widget build(BuildContext context) {
@@ -101,7 +102,7 @@ class _Login extends State<Login> {
                                   Radius.circular(8),
                                 ),
                                 borderSide: BorderSide(
-                                  color: Colors.indigo,
+                                  color: Colors.blue,
                                   width: 2,
                                 ),
                               ),
@@ -119,11 +120,11 @@ class _Login extends State<Login> {
                           width: 90
                               .toVWLength
                               .toPX(screenSize: MediaQuery.of(context).size),
-                          child: const TextField(
-                            obscureText: true,
+                          child: TextField(
+                            obscureText: !show,
                             decoration: InputDecoration(
                               hintText: 'Password',
-                              enabledBorder: OutlineInputBorder(
+                              enabledBorder: const OutlineInputBorder(
                                 borderRadius: BorderRadius.all(
                                   Radius.circular(8),
                                 ),
@@ -132,18 +133,32 @@ class _Login extends State<Login> {
                                   width: 2,
                                 ),
                               ),
-                              focusedBorder: OutlineInputBorder(
+                              focusedBorder: const OutlineInputBorder(
                                 borderRadius: BorderRadius.all(
                                   Radius.circular(8),
                                 ),
                                 borderSide: BorderSide(
-                                  color: Colors.indigo,
+                                  color: Colors.blue,
                                   width: 2,
                                 ),
                               ),
-                              prefixIcon: Padding(
+                              prefixIcon: const Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 16),
                                 child: Icon(Icons.lock),
+                              ),
+                              suffixIcon: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
+                                child: IconButton(
+                                  icon: Icon(show
+                                      ? Icons.visibility
+                                      : Icons.visibility_off),
+                                  onPressed: () {
+                                    setState(() {
+                                      show = !show;
+                                    });
+                                  },
+                                ),
                               ),
                             ),
                           ),
