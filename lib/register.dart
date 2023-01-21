@@ -15,6 +15,11 @@ class _Login extends State<Register> {
   bool show1 = false;
   bool show2 = false;
 
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+  TextEditingController confirmController = TextEditingController();
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Row(
@@ -86,8 +91,9 @@ class _Login extends State<Register> {
                           width: 90
                               .toVWLength
                               .toPX(screenSize: MediaQuery.of(context).size),
-                          child: const TextField(
-                            decoration: InputDecoration(
+                          child: TextField(
+                            controller: emailController,
+                            decoration: const InputDecoration(
                               hintText: 'Email',
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.all(
@@ -122,6 +128,7 @@ class _Login extends State<Register> {
                               .toVWLength
                               .toPX(screenSize: MediaQuery.of(context).size),
                           child: TextField(
+                            controller: passwordController,
                             obscureText: !show1,
                             decoration: InputDecoration(
                               hintText: 'Password',
@@ -174,6 +181,7 @@ class _Login extends State<Register> {
                               .toVWLength
                               .toPX(screenSize: MediaQuery.of(context).size),
                           child: TextField(
+                            controller: confirmController,
                             obscureText: !show2,
                             decoration: InputDecoration(
                               hintText: 'Confirm Password',
@@ -263,12 +271,49 @@ class _Login extends State<Register> {
                               'Register',
                             ),
                             onPressed: () => {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const HomeUser(),
-                                ),
-                              )
+                              if (emailController.text.isEmpty ||
+                                  passwordController.text.isEmpty ||
+                                  confirmController.text.isEmpty)
+                                {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Fields cannot be empty'),
+                                      backgroundColor: Colors.indigo,
+                                    ),
+                                  )
+                                }
+                              else if (!RegExp(
+                                      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                                  .hasMatch(emailController.text))
+                                {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content:
+                                          Text('Please insert a valid email'),
+                                      backgroundColor: Colors.indigo,
+                                    ),
+                                  )
+                                }
+                              else if (passwordController.text !=
+                                  confirmController.text)
+                                {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                          'Both password fields must have the same value'),
+                                      backgroundColor: Colors.indigo,
+                                    ),
+                                  )
+                                }
+                              else
+                                {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const HomeUser(),
+                                    ),
+                                  )
+                                }
                             },
                           ),
                         ),

@@ -13,6 +13,9 @@ class _Login extends State<Login> {
   bool? check = false;
   bool show = false;
 
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,8 +88,9 @@ class _Login extends State<Login> {
                           width: 90
                               .toVWLength
                               .toPX(screenSize: MediaQuery.of(context).size),
-                          child: const TextField(
-                            decoration: InputDecoration(
+                          child: TextField(
+                            controller: emailController,
+                            decoration: const InputDecoration(
                               hintText: 'Email',
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.all(
@@ -121,6 +125,7 @@ class _Login extends State<Login> {
                               .toVWLength
                               .toPX(screenSize: MediaQuery.of(context).size),
                           child: TextField(
+                            controller: passwordController,
                             obscureText: !show,
                             decoration: InputDecoration(
                               hintText: 'Password',
@@ -223,12 +228,37 @@ class _Login extends State<Login> {
                               'Login',
                             ),
                             onPressed: () => {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const HomeUser(),
-                                ),
-                              )
+                              if (emailController.text.isEmpty ||
+                                  passwordController.text.isEmpty)
+                                {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Fields cannot be empty'),
+                                      backgroundColor: Colors.indigo,
+                                    ),
+                                  ),
+                                }
+                              else if (!RegExp(
+                                      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                                  .hasMatch(emailController.text))
+                                {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content:
+                                          Text('Please insert a valid email.'),
+                                      backgroundColor: Colors.indigo,
+                                    ),
+                                  ),
+                                }
+                              else
+                                {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const HomeUser(),
+                                    ),
+                                  )
+                                }
                             },
                           ),
                         ),
