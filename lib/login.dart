@@ -233,7 +233,7 @@ class _Login extends State<Login> {
                                 {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Fields cannot be empty'),
+                                      content: Text('Mohon isi semua kolom!'),
                                       backgroundColor: Colors.indigo,
                                     ),
                                   ),
@@ -244,8 +244,8 @@ class _Login extends State<Login> {
                                 {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content:
-                                          Text('Please insert a valid email.'),
+                                      content: Text(
+                                          'Mohon isi kolom dengan email yang valid!'),
                                       backgroundColor: Colors.indigo,
                                     ),
                                   ),

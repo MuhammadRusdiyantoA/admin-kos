@@ -1,3 +1,5 @@
+import 'package:admin_kos/edit_password.dart';
+import 'package:admin_kos/edit_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:dimension/dimension.dart';
 
@@ -278,7 +280,8 @@ class _Profile extends State<Profile> {
           child: Column(
             children: [
               CircleAvatar(
-                backgroundImage: AssetImage('assets/images/dummyProfile.jpg'),
+                backgroundImage:
+                    const AssetImage('assets/images/dummyProfile.jpg'),
                 radius: MediaQuery.of(context).size.width * 0.12,
               ),
               SizedBox(
@@ -305,7 +308,7 @@ class _Profile extends State<Profile> {
         ),
         Container(
           width: MediaQuery.of(context).size.width,
-          height: MediaQuery.of(context).size.height * 0.425,
+          height: MediaQuery.of(context).size.height * 0.325,
           padding: EdgeInsets.symmetric(
               horizontal: MediaQuery.of(context).size.width * 0.075),
           child: Column(
@@ -333,15 +336,28 @@ class _Profile extends State<Profile> {
                   foregroundColor:
                       const MaterialStatePropertyAll(Colors.black54),
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const EditForm(),
+                    ),
+                  );
+                },
                 child: Row(
                   mainAxisSize: MainAxisSize.max,
-                  children: const [
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Icon(Icons.person_outline),
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: const [
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          child: Icon(Icons.person_outline),
+                        ),
+                        Text('Edit profil'),
+                      ],
                     ),
-                    Text('Edit profil'),
+                    const Icon(Icons.arrow_forward_outlined)
                   ],
                 ),
               ),
@@ -366,18 +382,64 @@ class _Profile extends State<Profile> {
                   foregroundColor:
                       const MaterialStatePropertyAll(Colors.black54),
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const EditPw(),
+                    ),
+                  );
+                },
                 child: Row(
                   mainAxisSize: MainAxisSize.max,
-                  children: const [
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Icon(Icons.lock_outline),
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: const [
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          child: Icon(Icons.lock_outline),
+                        ),
+                        Text('Ubah kata sandi'),
+                      ],
                     ),
-                    Text('Ubah kata sandi'),
+                    const Icon(Icons.arrow_forward_outlined)
                   ],
                 ),
               ),
+              // TextButton(
+              //   style: ButtonStyle(
+              //     fixedSize: MaterialStatePropertyAll(
+              //       Size.fromHeight(MediaQuery.of(context).size.height * 0.065),
+              //     ),
+              //     side: const MaterialStatePropertyAll(
+              //       BorderSide(
+              //         color: Colors.black26,
+              //         width: 1,
+              //       ),
+              //     ),
+              //     shape: const MaterialStatePropertyAll(
+              //       RoundedRectangleBorder(
+              //         borderRadius: BorderRadius.all(
+              //           Radius.circular(8),
+              //         ),
+              //       ),
+              //     ),
+              //     foregroundColor:
+              //         const MaterialStatePropertyAll(Colors.black54),
+              //   ),
+              //   onPressed: () {},
+              //   child: Row(
+              //     mainAxisSize: MainAxisSize.max,
+              //     children: const [
+              //       Padding(
+              //         padding: EdgeInsets.symmetric(horizontal: 8),
+              //         child: Icon(Icons.notifications_outlined),
+              //       ),
+              //       Text('Pengaturan notifikasi'),
+              //     ],
+              //   ),
+              // ),
               TextButton(
                 style: ButtonStyle(
                   fixedSize: MaterialStatePropertyAll(
@@ -402,45 +464,19 @@ class _Profile extends State<Profile> {
                 onPressed: () {},
                 child: Row(
                   mainAxisSize: MainAxisSize.max,
-                  children: const [
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Icon(Icons.notifications_outlined),
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.max,
+                      children: const [
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          child: Icon(Icons.info_outline),
+                        ),
+                        Text('Pusat bantuan'),
+                      ],
                     ),
-                    Text('Pengaturan notifikasi'),
-                  ],
-                ),
-              ),
-              TextButton(
-                style: ButtonStyle(
-                  fixedSize: MaterialStatePropertyAll(
-                    Size.fromHeight(MediaQuery.of(context).size.height * 0.065),
-                  ),
-                  side: const MaterialStatePropertyAll(
-                    BorderSide(
-                      color: Colors.black26,
-                      width: 1,
-                    ),
-                  ),
-                  shape: const MaterialStatePropertyAll(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(8),
-                      ),
-                    ),
-                  ),
-                  foregroundColor:
-                      const MaterialStatePropertyAll(Colors.black54),
-                ),
-                onPressed: () {},
-                child: Row(
-                  mainAxisSize: MainAxisSize.max,
-                  children: const [
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Icon(Icons.info_outline),
-                    ),
-                    Text('Pusat bantuan'),
+                    const Icon(Icons.arrow_forward_outlined)
                   ],
                 ),
               ),
@@ -467,12 +503,18 @@ class _Profile extends State<Profile> {
                 onPressed: () {},
                 child: Row(
                   mainAxisSize: MainAxisSize.max,
-                  children: const [
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Icon(Icons.exit_to_app),
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: const [
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          child: Icon(Icons.exit_to_app),
+                        ),
+                        Text('Keluar'),
+                      ],
                     ),
-                    Text('Keluar'),
+                    const Icon(Icons.arrow_forward_outlined),
                   ],
                 ),
               ),

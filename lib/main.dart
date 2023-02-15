@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'onboarding.dart';
 import 'home_user.dart';
+import 'edit_profile.dart';
 
 void main() {
   runApp(const Root());
