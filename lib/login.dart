@@ -1,4 +1,7 @@
+import 'package:admin_kos/home_admin.dart';
 import 'package:admin_kos/register.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:dimension/dimension.dart';
 import 'home_user.dart';
@@ -10,11 +13,42 @@ class Login extends StatefulWidget {
 }
 
 class _Login extends State<Login> {
+  var db = FirebaseFirestore.instance;
+  var auth = FirebaseAuth.instance;
+
   bool? check = false;
   bool show = false;
 
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+
+  void tryLogin() async {
+    try {
+      await auth.signInWithEmailAndPassword(
+        email: emailController.text,
+        password: passwordController.text,
+      );
+    } catch (exception) {
+      AlertDialog(
+        content: Text('Something went wrong! $exception'),
+      );
+    }
+    if (auth.currentUser != null) {
+      db.collection('users').doc(auth.currentUser?.uid).get().then((value) {
+        var user = value.data();
+        if (user?["role"] == "admin") {
+          navigate(const HomeAdmin());
+        } else {
+          navigate(const HomeUser());
+        }
+      });
+    }
+  }
+
+  void navigate(Widget page) {
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (context) => page));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -189,21 +223,21 @@ class _Login extends State<Login> {
                                   const Text('Ingat saya'),
                                 ],
                               ),
-                              TextButton(
-                                onPressed: () {
-                                  const AlertDialog(
-                                    alignment: Alignment.center,
-                                    content: Text('LOL, Sucx to be you!'),
-                                  );
-                                },
-                                child: const Text(
-                                  'Lupa kata sandi?',
-                                  style: TextStyle(
-                                    color: Colors.red,
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                ),
-                              )
+                              // TextButton(
+                              //   onPressed: () {
+                              //     const AlertDialog(
+                              //       alignment: Alignment.center,
+                              //       content: Text('LOL, Sucx to be you!'),
+                              //     );
+                              //   },
+                              //   child: const Text(
+                              //     'Lupa kata sandi?',
+                              //     style: TextStyle(
+                              //       color: Colors.red,
+                              //       decoration: TextDecoration.underline,
+                              //     ),
+                              //   ),
+                              // )
                             ],
                           ),
                         ),
@@ -251,14 +285,7 @@ class _Login extends State<Login> {
                                   ),
                                 }
                               else
-                                {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const HomeUser(),
-                                    ),
-                                  )
-                                }
+                                {tryLogin()}
                             },
                           ),
                         ),

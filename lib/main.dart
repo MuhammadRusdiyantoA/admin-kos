@@ -1,10 +1,29 @@
 import 'dart:async';
+import 'package:admin_kos/home_admin.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'onboarding.dart';
 import 'home_user.dart';
-import 'edit_profile.dart';
 
-void main() {
+void main() async {
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  // FirebaseAuth.instance.createUserWithEmailAndPassword(
+  //     email: 'admin.kostapp@gmail.com', password: 'kostapp1');
+  // FirebaseFirestore.instance
+  //     .collection('users')
+  //     .doc(FirebaseAuth.instance.currentUser?.uid)
+  //     .set({
+  //   'username': 'Administrator',
+  //   'address': 'none',
+  //   'phone': 0,
+  //   'NIK': 0,
+  //   'role': 'admin'
+  // });
   runApp(const Root());
 }
 
@@ -31,20 +50,47 @@ class Splash extends StatefulWidget {
 }
 
 class _Splash extends State<Splash> {
-  @override
-  void initState() {
-    super.initState();
+  late Widget page;
+  var db = FirebaseFirestore.instance;
+  var auth = FirebaseAuth.instance;
+
+  void isLoggedIn() async {
+    var user = auth.currentUser;
+
+    if (auth.currentUser != null) {
+      var userData = await db
+          .collection('users')
+          .doc(user?.uid)
+          .get()
+          .then((value) => value.data() as Map<String, dynamic>);
+
+      if (userData['role'] == 'admin') {
+        page = const HomeAdmin();
+      } else {
+        page = const HomeUser();
+      }
+    } else {
+      page = const Onboard();
+    }
+
     Timer(
       const Duration(seconds: 3),
       () => {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const HomeUser(),
+            builder: (context) => page,
           ),
         )
       },
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    isLoggedIn();
   }
 
   @override

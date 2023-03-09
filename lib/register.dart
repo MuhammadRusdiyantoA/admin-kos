@@ -1,3 +1,7 @@
+import 'dart:math';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:dimension/dimension.dart';
 import 'login.dart';
@@ -11,6 +15,9 @@ class Register extends StatefulWidget {
 }
 
 class _Login extends State<Register> {
+  var db = FirebaseFirestore.instance;
+  var auth = FirebaseAuth.instance;
+
   bool? check = false;
   bool show1 = false;
   bool show2 = false;
@@ -18,6 +25,42 @@ class _Login extends State<Register> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController confirmController = TextEditingController();
+
+  void tryRegister() async {
+    try {
+      await auth.createUserWithEmailAndPassword(
+        email: emailController.text,
+        password: passwordController.text,
+      );
+
+      final user = <String, dynamic>{
+        'username': 'user${Random().nextInt(999999)}',
+        'address': 'none',
+        'phone': 0,
+        'NIK': 0,
+        'role': 'user'
+      };
+
+      db.collection('users').doc(auth.currentUser!.uid).set(user);
+    } catch (exception) {
+      AlertDialog(
+        content: Text('Something went wrong! $exception'),
+      );
+    }
+
+    if (auth.currentUser != null) {
+      navigate();
+    }
+  }
+
+  void navigate() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const HomeUser(),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -306,14 +349,7 @@ class _Login extends State<Register> {
                                   )
                                 }
                               else
-                                {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const HomeUser(),
-                                    ),
-                                  )
-                                }
+                                {tryRegister()}
                             },
                           ),
                         ),

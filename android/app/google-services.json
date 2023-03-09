@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "597337847222",
+    "project_id": "kostapp-4e329",
+    "storage_bucket": "kostapp-4e329.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:597337847222:android:2d5b2d392eb39ffd0ebd17",
+        "android_client_info": {
+          "package_name": "com.example.admin_kos"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "597337847222-j1t5i114iaesmd9e4md11e5q7kqdi3ab.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNdSEi4pEhwdL9F1QTWDwgFeH1XtB1wuc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "597337847222-j1t5i114iaesmd9e4md11e5q7kqdi3ab.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

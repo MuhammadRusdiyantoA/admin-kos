@@ -8,10 +8,12 @@ class RoomDetail extends StatefulWidget {
   final List<String> facilities;
   final List<String> roomSpec;
   final List<String> bathSpec;
+  final bool isAdmin;
+  final int invoice;
 
   const RoomDetail(this.roomImg, this.roomNum, this.roomStat, this.roomOwner,
       this.facilities, this.roomSpec, this.bathSpec,
-      {super.key});
+      {super.key, this.isAdmin = false, this.invoice = 0});
 
   @override
   _RoomDetail createState() => _RoomDetail();
@@ -20,38 +22,11 @@ class RoomDetail extends StatefulWidget {
 class _RoomDetail extends State<RoomDetail> {
   String curUser = "Muhammad Sumbul bin Abdul Jalil";
   bool check = false;
-  bool submitable = false;
-  bool submitted = false;
-  TextEditingController detailController = TextEditingController();
-
-  List<bool> facilitiesCheck = [];
-
-  bool anySelected() {
-    for (int i = 0; i < facilitiesCheck.length; i++) {
-      if (facilitiesCheck[i]) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  List<Color?> getColor() {
-    if (submitted) {
-      return [Colors.indigo[200], Colors.indigo[800]];
-    } else if (submitable && anySelected()) {
-      return [Colors.indigo, Colors.white];
-    } else {
-      return [Colors.black38, Colors.black];
-    }
-  }
 
   @override
   void initState() {
     super.initState();
-    if (widget.roomOwner == curUser) {
-      for (int i = 0; i < widget.facilities.length; i++) {
-        facilitiesCheck.add(false);
-      }
+    if (widget.roomOwner == curUser || widget.isAdmin) {
       setState(() {
         check = !check;
       });
@@ -130,7 +105,7 @@ class _RoomDetail extends State<RoomDetail> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text('Penghuni'),
-                        check
+                        widget.roomOwner == curUser
                             ? FittedBox(
                                 child: RichText(
                                   text: TextSpan(
@@ -170,166 +145,308 @@ class _RoomDetail extends State<RoomDetail> {
               ),
             ),
             check
-                ? Container(
-                    width: MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.height * 0.75,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Flexible(
-                          child: Text(
-                            'Pilih beberapa tombol di bawah ini untuk mengonsultasikan kerusakan yang ada pada kamarmu.',
-                            style: TextStyle(
-                              fontSize: 16,
-                            ),
+                ? OwnedRoom(
+                    widget.roomImg,
+                    widget.roomNum,
+                    widget.roomStat,
+                    widget.roomOwner,
+                    widget.facilities,
+                    widget.roomSpec,
+                    widget.bathSpec,
+                    isAdmin: widget.isAdmin,
+                    invoice: widget.invoice,
+                  )
+                : UnownedRoom(
+                    widget.roomImg,
+                    widget.roomNum,
+                    widget.roomStat,
+                    widget.roomOwner,
+                    widget.facilities,
+                    widget.roomSpec,
+                    widget.bathSpec,
+                    isAdmin: widget.isAdmin,
+                    invoice: widget.invoice,
+                  )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class OwnedRoom extends StatefulWidget {
+  final AssetImage roomImg;
+  final int roomNum;
+  final String roomStat;
+  final String roomOwner;
+  final List<String> facilities;
+  final List<String> roomSpec;
+  final List<String> bathSpec;
+  final bool isAdmin;
+  final int invoice;
+
+  const OwnedRoom(this.roomImg, this.roomNum, this.roomStat, this.roomOwner,
+      this.facilities, this.roomSpec, this.bathSpec,
+      {super.key, this.isAdmin = false, this.invoice = 0});
+
+  @override
+  _OwnedRoom createState() => _OwnedRoom();
+}
+
+class _OwnedRoom extends State<OwnedRoom> {
+  bool submitable = false;
+  bool submitted = false;
+  TextEditingController detailController = TextEditingController();
+
+  bool anySelected() {
+    for (int i = 0; i < facilitiesCheck.length; i++) {
+      if (facilitiesCheck[i]) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  List<bool> facilitiesCheck = [];
+
+  @override
+  void initState() {
+    super.initState();
+    for (int i = 0; i < widget.facilities.length; i++) {
+      facilitiesCheck.add(false);
+    }
+  }
+
+  List<Color?> getColor() {
+    if (submitted) {
+      return [Colors.indigo[200], Colors.indigo[800]];
+    } else if (submitable && anySelected()) {
+      return [Colors.indigo, Colors.white];
+    } else {
+      return [Colors.black38, Colors.black];
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: MediaQuery.of(context).size.width,
+      height: MediaQuery.of(context).size.height * 0.75,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Flexible(
+            child: Text(
+              'Pilih beberapa tombol di bawah ini untuk mengonsultasikan kerusakan yang ada pada kamarmu.',
+              style: TextStyle(
+                fontSize: 16,
+              ),
+            ),
+          ),
+          Wrap(
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.start,
+            children: [
+              for (var i = 0; i < widget.facilities.length; i++)
+                Container(
+                  margin: const EdgeInsets.only(right: 12),
+                  child: TextButton(
+                    style: ButtonStyle(
+                      alignment: Alignment.center,
+                      padding: const MaterialStatePropertyAll(
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                      ),
+                      backgroundColor: MaterialStatePropertyAll(
+                        facilitiesCheck[i] ? Colors.indigo : Colors.transparent,
+                      ),
+                      foregroundColor: MaterialStatePropertyAll(
+                        facilitiesCheck[i] ? Colors.white : Colors.black54,
+                      ),
+                      shape: MaterialStatePropertyAll(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(32),
+                          side: const BorderSide(
+                            color: Colors.indigo,
+                            width: 1,
                           ),
                         ),
-                        Wrap(
-                          runSpacing: 12,
-                          crossAxisAlignment: WrapCrossAlignment.start,
-                          children: [
-                            for (var i = 0; i < widget.facilities.length; i++)
-                              Container(
-                                margin: const EdgeInsets.only(right: 12),
-                                child: TextButton(
-                                  style: ButtonStyle(
-                                    alignment: Alignment.center,
-                                    padding: const MaterialStatePropertyAll(
-                                      EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 16),
-                                    ),
-                                    backgroundColor: MaterialStatePropertyAll(
-                                      facilitiesCheck[i]
-                                          ? Colors.indigo
-                                          : Colors.transparent,
-                                    ),
-                                    foregroundColor: MaterialStatePropertyAll(
-                                      facilitiesCheck[i]
-                                          ? Colors.white
-                                          : Colors.black54,
-                                    ),
-                                    shape: MaterialStatePropertyAll(
-                                      RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(32),
-                                        side: const BorderSide(
-                                          color: Colors.indigo,
-                                          width: 1,
+                      ),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        facilitiesCheck[i] = !facilitiesCheck[i];
+                      });
+                    },
+                    child: Text(
+                      widget.facilities[i],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          TextField(
+            onChanged: (value) {
+              if (value.isNotEmpty) {
+                setState(() {
+                  submitable = true;
+                });
+              } else {
+                setState(() {
+                  submitable = false;
+                });
+              }
+            },
+            controller: detailController,
+            maxLines: 6,
+            decoration: InputDecoration(
+              hintText: 'Tulis detail kerusakan...',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: Colors.black54,
+                  width: 1,
+                ),
+              ),
+            ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: widget.isAdmin
+                    ? widget.roomOwner != "Kosong"
+                        ? [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration:
+                                  BoxDecoration(color: Colors.indigo[200]),
+                              child: Column(
+                                children: const [
+                                  Text('Kapan anda akan memperbaikinya?'),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              width: MediaQuery.of(context).size.width - 32,
+                              child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisSize: MainAxisSize.max,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text('Tagihan'),
+                                      Text(
+                                        '${widget.invoice}',
+                                        style: const TextStyle(
+                                          color: Colors.red,
                                         ),
                                       ),
+                                    ],
+                                  ),
+                                  Container(
+                                    margin: const EdgeInsets.only(top: 16),
+                                    height: 48,
+                                    width:
+                                        MediaQuery.of(context).size.width - 32,
+                                    child: TextButton(
+                                      style: ButtonStyle(
+                                        shape: MaterialStatePropertyAll(
+                                          RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(24),
+                                          ),
+                                        ),
+                                        backgroundColor:
+                                            const MaterialStatePropertyAll(
+                                                Colors.indigo),
+                                        foregroundColor:
+                                            const MaterialStatePropertyAll(
+                                                Colors.white),
+                                        padding: MaterialStatePropertyAll(
+                                          EdgeInsets.symmetric(
+                                              horizontal: MediaQuery.of(context)
+                                                      .size
+                                                      .width *
+                                                  0.2),
+                                        ),
+                                      ),
+                                      onPressed: () {},
+                                      child: const Text('Minta Tagihan'),
                                     ),
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      facilitiesCheck[i] = !facilitiesCheck[i];
-                                    });
-                                  },
-                                  child: Text(
-                                    widget.facilities[i],
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        TextField(
-                          onChanged: (value) {
-                            if (value.isNotEmpty) {
-                              setState(() {
-                                submitable = true;
-                              });
-                            } else {
-                              setState(() {
-                                submitable = false;
-                              });
-                            }
-                          },
-                          controller: detailController,
-                          maxLines: 6,
-                          decoration: InputDecoration(
-                            hintText: 'Tulis detail kerusakan...',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Colors.black54,
-                                width: 1,
+                                  )
+                                ],
                               ),
                             ),
-                          ),
-                        ),
+                          ]
+                        : []
+                    : [
                         Column(
-                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Row(
-                              mainAxisSize: MainAxisSize.max,
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                SizedBox(
-                                  height: 48,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.425,
-                                  child: TextButton(
-                                    style: ButtonStyle(
-                                      shape: MaterialStatePropertyAll(
-                                        RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(24),
-                                          side: BorderSide(
-                                            color: submitted
-                                                ? Colors.black
-                                                : Colors.black38,
-                                            width: 2,
-                                          ),
-                                        ),
-                                      ),
-                                      foregroundColor: MaterialStatePropertyAll(
-                                        submitted
+                            SizedBox(
+                              height: 48,
+                              width: MediaQuery.of(context).size.width * 0.425,
+                              child: TextButton(
+                                style: ButtonStyle(
+                                  shape: MaterialStatePropertyAll(
+                                    RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(24),
+                                      side: BorderSide(
+                                        color: submitted
                                             ? Colors.black
-                                            : Colors.black45,
+                                            : Colors.black38,
+                                        width: 2,
                                       ),
                                     ),
-                                    onPressed: submitted
-                                        ? () {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              const SnackBar(
-                                                content: Text(
-                                                  'Laporan kerusakan berhasil diubah!',
-                                                ),
-                                                backgroundColor: Colors.indigo,
-                                              ),
-                                            );
-                                          }
-                                        : null,
-                                    child: const Text('Edit'),
+                                  ),
+                                  foregroundColor: MaterialStatePropertyAll(
+                                    submitted ? Colors.black : Colors.black45,
                                   ),
                                 ),
-                                SizedBox(
-                                  height: 48,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.425,
-                                  child: TextButton(
-                                    style: ButtonStyle(
-                                      shape: MaterialStatePropertyAll(
-                                        RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(24),
-                                          side: const BorderSide(
-                                            color: Colors.black38,
-                                            width: 1,
+                                onPressed: submitted
+                                    ? () {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Laporan kerusakan berhasil diubah!',
+                                            ),
+                                            backgroundColor: Colors.indigo,
                                           ),
-                                        ),
-                                      ),
-                                      backgroundColor: MaterialStatePropertyAll(
-                                        getColor()[0],
-                                      ),
-                                      foregroundColor: MaterialStatePropertyAll(
-                                        getColor()[1],
+                                        );
+                                      }
+                                    : null,
+                                child: const Text('Edit'),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 48,
+                              width: MediaQuery.of(context).size.width * 0.425,
+                              child: TextButton(
+                                style: ButtonStyle(
+                                  shape: MaterialStatePropertyAll(
+                                    RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(24),
+                                      side: const BorderSide(
+                                        color: Colors.black38,
+                                        width: 1,
                                       ),
                                     ),
-                                    onPressed: (anySelected() && submitable) &&
-                                            !submitted
+                                  ),
+                                  backgroundColor: MaterialStatePropertyAll(
+                                    getColor()[0],
+                                  ),
+                                  foregroundColor: MaterialStatePropertyAll(
+                                    getColor()[1],
+                                  ),
+                                ),
+                                onPressed:
+                                    (anySelected() && submitable) && !submitted
                                         ? () {
                                             setState(() {
                                               submitted = !submitted;
@@ -344,239 +461,267 @@ class _RoomDetail extends State<RoomDetail> {
                                             );
                                           }
                                         : null,
-                                    child:
-                                        Text(submitted ? 'Terkirim' : 'Kirim'),
-                                  ),
+                                child: Text(submitted ? 'Terkirim' : 'Kirim'),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          margin: const EdgeInsets.only(top: 16),
+                          height: 48,
+                          width: MediaQuery.of(context).size.width - 32,
+                          child: TextButton(
+                            style: ButtonStyle(
+                              shape: MaterialStatePropertyAll(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(24),
                                 ),
+                              ),
+                              backgroundColor:
+                                  const MaterialStatePropertyAll(Colors.green),
+                              foregroundColor:
+                                  const MaterialStatePropertyAll(Colors.white),
+                              padding: MaterialStatePropertyAll(
+                                EdgeInsets.symmetric(
+                                    horizontal:
+                                        MediaQuery.of(context).size.width *
+                                            0.2),
+                              ),
+                            ),
+                            onPressed: () {},
+                            child: Row(
+                              mainAxisSize: MainAxisSize.max,
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: const [
+                                Icon(Icons.phone),
+                                Text('Konsultasi lewat Whatsapp')
                               ],
                             ),
-                            Container(
-                              margin: const EdgeInsets.only(top: 16),
-                              height: 48,
-                              width: MediaQuery.of(context).size.width - 32,
-                              child: TextButton(
-                                style: ButtonStyle(
-                                  shape: MaterialStatePropertyAll(
-                                    RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(24),
-                                    ),
-                                  ),
-                                  backgroundColor:
-                                      const MaterialStatePropertyAll(
-                                          Colors.green),
-                                  foregroundColor:
-                                      const MaterialStatePropertyAll(
-                                          Colors.white),
-                                  padding: MaterialStatePropertyAll(
-                                    EdgeInsets.symmetric(
-                                        horizontal:
-                                            MediaQuery.of(context).size.width *
-                                                0.2),
-                                  ),
-                                ),
-                                onPressed: () {},
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.max,
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
-                                  children: const [
-                                    Icon(Icons.phone),
-                                    Text('Konsultasi lewat Whatsapp')
-                                  ],
-                                ),
-                              ),
-                            )
-                          ],
-                        ),
+                          ),
+                        )
                       ],
-                    ),
-                  )
-                : Column(
-                    children: [
-                      Container(
-                        width: MediaQuery.of(context).size.width - 32,
-                        padding: const EdgeInsets.only(bottom: 16),
-                        margin: const EdgeInsets.symmetric(horizontal: 16),
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(
-                              color: Colors.black38,
-                              width: 1,
-                            ),
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Spesifikasi Kamar',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 18,
-                              ),
-                            ),
-                            Container(
-                              margin: const EdgeInsets.only(top: 16),
-                              child: GridView.count(
-                                crossAxisCount: 1,
-                                physics: const NeverScrollableScrollPhysics(),
-                                shrinkWrap: true,
-                                childAspectRatio: (18 / 1),
-                                children: [
-                                  for (int i = 0;
-                                      i < widget.roomSpec.length;
-                                      i++)
-                                    Text(widget.roomSpec[i])
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        width: MediaQuery.of(context).size.width - 32,
-                        padding: const EdgeInsets.only(bottom: 16),
-                        margin: const EdgeInsets.all(16),
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(
-                              color: Colors.black38,
-                              width: 1,
-                            ),
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Fasilitas kamar',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 18,
-                              ),
-                            ),
-                            Container(
-                              margin: const EdgeInsets.only(top: 16),
-                              child: GridView.count(
-                                crossAxisCount: 2,
-                                physics: const NeverScrollableScrollPhysics(),
-                                shrinkWrap: true,
-                                childAspectRatio: (9 / 1),
-                                children: [
-                                  for (int i = 0;
-                                      i < widget.facilities.length;
-                                      i++)
-                                    Text(widget.facilities[i])
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        width: MediaQuery.of(context).size.width - 32,
-                        padding: const EdgeInsets.only(bottom: 16),
-                        margin: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Fasilitas kamar mandi',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 18,
-                              ),
-                            ),
-                            Container(
-                              margin: const EdgeInsets.only(top: 16),
-                              child: GridView.count(
-                                crossAxisCount: 2,
-                                physics: const NeverScrollableScrollPhysics(),
-                                shrinkWrap: true,
-                                childAspectRatio: (9 / 1),
-                                children: [
-                                  for (int i = 0;
-                                      i < widget.bathSpec.length;
-                                      i++)
-                                    Text(widget.bathSpec[i])
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        width: MediaQuery.of(context).size.width - 32,
-                        height: MediaQuery.of(context).size.height * 0.175,
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 32,
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.max,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            SizedBox(
-                              height:
-                                  MediaQuery.of(context).size.height * 0.075,
-                              width: MediaQuery.of(context).size.width,
-                              child: TextButton(
-                                style: ButtonStyle(
-                                  backgroundColor: MaterialStatePropertyAll(
-                                    widget.roomStat == "Kosong"
-                                        ? Colors.indigo
-                                        : Colors.black12,
-                                  ),
-                                  foregroundColor: MaterialStatePropertyAll(
-                                    widget.roomStat == "Kosong"
-                                        ? Colors.white
-                                        : Colors.black38,
-                                  ),
-                                  shape: MaterialStatePropertyAll(
-                                    RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(24),
-                                    ),
-                                  ),
-                                ),
-                                onPressed:
-                                    widget.roomStat == "Kosong" ? () {} : null,
-                                child: const Text('Booking'),
-                              ),
-                            ),
-                            SizedBox(
-                              height:
-                                  MediaQuery.of(context).size.height * 0.075,
-                              width: MediaQuery.of(context).size.width,
-                              child: TextButton(
-                                style: ButtonStyle(
-                                  backgroundColor:
-                                      const MaterialStatePropertyAll(
-                                    Colors.indigo,
-                                  ),
-                                  foregroundColor:
-                                      const MaterialStatePropertyAll(
-                                    Colors.white,
-                                  ),
-                                  shape: MaterialStatePropertyAll(
-                                    RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(24),
-                                    ),
-                                  ),
-                                ),
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                child: const Text('Lihat kamar lain'),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
+    );
+  }
+}
+
+class UnownedRoom extends StatefulWidget {
+  final AssetImage roomImg;
+  final int roomNum;
+  final String roomStat;
+  final String roomOwner;
+  final List<String> facilities;
+  final List<String> roomSpec;
+  final List<String> bathSpec;
+  final bool isAdmin;
+  final int invoice;
+
+  const UnownedRoom(this.roomImg, this.roomNum, this.roomStat, this.roomOwner,
+      this.facilities, this.roomSpec, this.bathSpec,
+      {super.key, this.isAdmin = false, this.invoice = 0});
+
+  @override
+  _UnownedRoom createState() => _UnownedRoom();
+}
+
+class _UnownedRoom extends State<UnownedRoom> {
+  bool booked = false;
+
+  List<Color?> getBookingColor() {
+    if (widget.roomStat == "Kosong" && !booked) {
+      return [Colors.indigo, Colors.white];
+    } else if (booked) {
+      return [Colors.indigo[200], Colors.indigo[800]];
+    } else {
+      return [Colors.black12, Colors.black38];
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: MediaQuery.of(context).size.width - 32,
+          padding: const EdgeInsets.only(bottom: 16),
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: const BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: Colors.black38,
+                width: 1,
+              ),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Spesifikasi Kamar',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.only(top: 16),
+                child: GridView.count(
+                  crossAxisCount: 1,
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  childAspectRatio: (18 / 1),
+                  children: [
+                    for (int i = 0; i < widget.roomSpec.length; i++)
+                      Text(widget.roomSpec[i])
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          width: MediaQuery.of(context).size.width - 32,
+          padding: const EdgeInsets.only(bottom: 16),
+          margin: const EdgeInsets.all(16),
+          decoration: const BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: Colors.black38,
+                width: 1,
+              ),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Fasilitas kamar',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.only(top: 16),
+                child: GridView.count(
+                  crossAxisCount: 2,
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  childAspectRatio: (9 / 1),
+                  children: [
+                    for (int i = 0; i < widget.facilities.length; i++)
+                      Text(widget.facilities[i])
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          width: MediaQuery.of(context).size.width - 32,
+          padding: const EdgeInsets.only(bottom: 16),
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Fasilitas kamar mandi',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.only(top: 16),
+                child: GridView.count(
+                  crossAxisCount: 2,
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  childAspectRatio: (9 / 1),
+                  children: [
+                    for (int i = 0; i < widget.bathSpec.length; i++)
+                      Text(widget.bathSpec[i])
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          width: MediaQuery.of(context).size.width - 32,
+          height: MediaQuery.of(context).size.height * 0.175,
+          margin: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 32,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.075,
+                width: MediaQuery.of(context).size.width,
+                child: TextButton(
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStatePropertyAll(
+                      getBookingColor()[0],
+                    ),
+                    foregroundColor: MaterialStatePropertyAll(
+                      getBookingColor()[1],
+                    ),
+                    shape: MaterialStatePropertyAll(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                    ),
+                  ),
+                  onPressed: (widget.roomStat == "Kosong" && !booked)
+                      ? () {
+                          setState(() {
+                            booked = !booked;
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Kamar berhasil di-booking!'),
+                              backgroundColor: Colors.indigo,
+                            ),
+                          );
+                        }
+                      : null,
+                  child: const Text('Booking'),
+                ),
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.075,
+                width: MediaQuery.of(context).size.width,
+                child: TextButton(
+                  style: ButtonStyle(
+                    backgroundColor: const MaterialStatePropertyAll(
+                      Colors.indigo,
+                    ),
+                    foregroundColor: const MaterialStatePropertyAll(
+                      Colors.white,
+                    ),
+                    shape: MaterialStatePropertyAll(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Lihat kamar lain'),
+                ),
+              ),
+            ],
+          ),
+        )
+      ],
     );
   }
 }

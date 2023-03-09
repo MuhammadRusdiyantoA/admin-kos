@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'home_user.dart';
 
 class EditForm extends StatefulWidget {
   const EditForm({super.key});
@@ -156,24 +155,24 @@ class _EditForm extends State<EditForm> {
                 Container(
                   width: 72,
                   height: 72,
-                  decoration: BoxDecoration(
-                    image: imageFile == null
-                        ? const DecorationImage(
-                            image: AssetImage('assets/images/dummyProfile.jpg'),
-                            fit: BoxFit.cover,
-                            colorFilter: ColorFilter.mode(
-                              Colors.black38,
-                              BlendMode.darken,
-                            ),
-                          )
-                        : DecorationImage(
-                            image: FileImage(imageFile!),
-                            fit: BoxFit.cover,
-                            colorFilter: const ColorFilter.mode(
-                              Colors.black38,
-                              BlendMode.darken,
-                            ),
-                          ),
+                  decoration: const BoxDecoration(
+                    image: // imageFile != null
+                        //     ? DecorationImage(
+                        //         image: FileImage(imageFile!),
+                        //         fit: BoxFit.cover,
+                        //         colorFilter: const ColorFilter.mode(
+                        //           Colors.black38,
+                        //           BlendMode.darken,
+                        //         ),
+                        //       ) :
+                        DecorationImage(
+                      image: AssetImage('assets/images/dummyProfile.jpg'),
+                      fit: BoxFit.cover,
+                      colorFilter: ColorFilter.mode(
+                        Colors.black38,
+                        BlendMode.darken,
+                      ),
+                    ),
                     shape: BoxShape.circle,
                   ),
                   child: TextButton(
