@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class EditPw extends StatefulWidget {
@@ -8,6 +10,9 @@ class EditPw extends StatefulWidget {
 }
 
 class _EditPw extends State<EditPw> {
+  var db = FirebaseFirestore.instance;
+  var auth = FirebaseAuth.instance;
+
   List<bool> check = [false, false, false];
 
   TextEditingController oldController = TextEditingController();
@@ -66,6 +71,58 @@ class _EditPw extends State<EditPw> {
         ),
       ],
     );
+  }
+
+  void updatePassword() async {
+    try {
+      var credential = EmailAuthProvider.credential(
+          email: auth.currentUser!.email as String,
+          password: oldController.text);
+      await auth.currentUser!.reauthenticateWithCredential(credential);
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                CircularProgressIndicator(),
+              ],
+            ),
+          );
+        },
+      );
+      await auth.currentUser!.updatePassword(newController.text);
+      if (mounted) {
+        Navigator.of(context).pop();
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Kata sandi berhasil diperbarui!'),
+            backgroundColor: Colors.indigo,
+          ),
+        );
+      }
+    } on FirebaseAuthException catch (exception) {
+      if (exception.code == "wrong-password") {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password lama salah!'),
+            backgroundColor: Colors.indigo,
+          ),
+        );
+      }
+    } catch (exception) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: Text('Something went wrong! $exception'),
+          );
+        },
+      );
+    }
   }
 
   @override
@@ -158,13 +215,6 @@ class _EditPw extends State<EditPw> {
                             backgroundColor: Colors.indigo,
                           ),
                         );
-                      } else if (oldController.text != 'password') {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Password lama salah!'),
-                            backgroundColor: Colors.indigo,
-                          ),
-                        );
                       } else if (newController.text != confirmController.text) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -174,13 +224,7 @@ class _EditPw extends State<EditPw> {
                           ),
                         );
                       } else {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Kata sandi berhasil diperbarui!'),
-                            backgroundColor: Colors.indigo,
-                          ),
-                        );
+                        updatePassword();
                       }
                     },
                     child: Text(

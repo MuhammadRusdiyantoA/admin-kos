@@ -7,21 +7,6 @@ class Onboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MediaQuery(
-      data: MediaQueryData(),
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: _Onboard(),
-      ),
-    );
-  }
-}
-
-class _Onboard extends StatelessWidget {
-  const _Onboard({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       body: Row(
         mainAxisAlignment: MainAxisAlignment.center,

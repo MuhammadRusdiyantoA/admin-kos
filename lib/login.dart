@@ -69,7 +69,9 @@ class _Login extends State<Login> {
   void navigate(Widget page) {
     Navigator.of(context).pop();
     Navigator.pushReplacement(
-        context, MaterialPageRoute(builder: (context) => page));
+      context,
+      MaterialPageRoute(builder: (context) => page),
+    );
   }
 
   @override

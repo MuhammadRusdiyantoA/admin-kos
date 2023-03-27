@@ -73,6 +73,7 @@ class _Login extends State<Register> {
   }
 
   void navigate() {
+    Navigator.of(context).pop();
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
