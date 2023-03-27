@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class About extends StatefulWidget {
@@ -10,15 +12,44 @@ class About extends StatefulWidget {
 }
 
 class _About extends State<About> {
-  String about =
-      "Kos 'Mboke' mulai beroperasi sejak tahun 20xx dan sampai sekarang bla bla bla";
+  var db = FirebaseFirestore.instance;
+  var auth = FirebaseAuth.instance;
+
   TextEditingController controller = TextEditingController();
+
+  void updateAbout() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              CircularProgressIndicator(),
+            ],
+          ),
+        );
+      },
+    );
+
+    db.collection('about').doc('kost').set({
+      'content': controller.text,
+    }).then((value) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('History updated successfully!'),
+          backgroundColor: Colors.indigo,
+        ),
+      );
+    }).catchError((error) {
+      AlertDialog(
+        content: Text('Something went wrong! $error'),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.isAdmin) {
-      controller.text = about;
-    }
     return SingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.max,
@@ -46,16 +77,11 @@ class _About extends State<About> {
                   ElevatedButton(
                     onPressed: () {
                       if (controller.text.isNotEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('History updated successfully!'),
-                            backgroundColor: Colors.indigo,
-                          ),
-                        );
+                        updateAbout();
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('History cannot be empty!'),
+                            content: Text('About cannot be empty!'),
                             backgroundColor: Colors.indigo,
                           ),
                         );
@@ -92,14 +118,26 @@ class _About extends State<About> {
                 const SizedBox(
                   height: 16,
                 ),
-                widget.isAdmin
-                    ? TextField(
-                        minLines: 21,
-                        maxLines: 9999,
-                        controller: controller,
-                        decoration: InputDecoration(),
-                      )
-                    : Text(about),
+                StreamBuilder(
+                    stream: db.collection('about').doc('kost').snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        var data =
+                            snapshot.data!.data() as Map<String, dynamic>;
+                        controller.text = data['content'];
+
+                        if (widget.isAdmin) {
+                          return TextField(
+                            minLines: 21,
+                            maxLines: 9999,
+                            controller: controller,
+                          );
+                        } else {
+                          return Text(controller.text);
+                        }
+                      }
+                      return const CircularProgressIndicator();
+                    })
               ],
             ),
           )

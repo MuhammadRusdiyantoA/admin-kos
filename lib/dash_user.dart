@@ -1,5 +1,7 @@
 import 'package:admin_kos/room_detail.dart';
 import 'package:admin_kos/dashboard.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class DashUser extends StatefulWidget {
@@ -10,6 +12,9 @@ class DashUser extends StatefulWidget {
 }
 
 class _DashUser extends State<DashUser> {
+  var db = FirebaseFirestore.instance;
+  var auth = FirebaseAuth.instance;
+
   bool visibility = false;
 
   @override
@@ -41,13 +46,34 @@ class _DashUser extends State<DashUser> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.max,
                   children: [
-                    const FittedBox(
-                      child: Text(
-                        'Halo, Muhammad Sumbul bin Abdul Jalil!',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                        ),
+                    FittedBox(
+                      child: StreamBuilder(
+                        stream: db
+                            .collection('users')
+                            .doc(auth.currentUser?.uid)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            var data =
+                                snapshot.data!.data() as Map<String, dynamic>;
+
+                            return Column(
+                              children: [
+                                Text(
+                                  'Halo, ${data["username"]}',
+                                  textAlign: TextAlign.left,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        },
                       ),
                     ),
                     Row(

@@ -1,5 +1,7 @@
 import 'package:admin_kos/room_detail.dart';
 import 'package:admin_kos/dashboard.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class DashAdmin extends StatefulWidget {
@@ -10,6 +12,9 @@ class DashAdmin extends StatefulWidget {
 }
 
 class _DashAdmin extends State<DashAdmin> {
+  var db = FirebaseFirestore.instance;
+  var auth = FirebaseAuth.instance;
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -18,7 +23,7 @@ class _DashAdmin extends State<DashAdmin> {
         mainAxisSize: MainAxisSize.max,
         children: [
           Container(
-            height: MediaQuery.of(context).size.height * 0.1525,
+            height: MediaQuery.of(context).size.height * 0.175,
             width: MediaQuery.of(context).size.width,
             padding: const EdgeInsets.all(24),
             color: Colors.indigo,
@@ -27,14 +32,30 @@ class _DashAdmin extends State<DashAdmin> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const FittedBox(
-                  child: Text(
-                    'Halo, Parjono!',
-                    textAlign: TextAlign.left,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                    ),
+                FittedBox(
+                  child: StreamBuilder(
+                    stream: db
+                        .collection('users')
+                        .doc(auth.currentUser?.uid)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        var data =
+                            snapshot.data!.data() as Map<String, dynamic>;
+
+                        return Text(
+                          'Halo, ${data["username"]}',
+                          textAlign: TextAlign.left,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                          ),
+                        );
+                      }
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    },
                   ),
                 ),
                 Row(

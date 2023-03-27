@@ -24,28 +24,50 @@ class _Login extends State<Login> {
 
   void tryLogin() async {
     try {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                CircularProgressIndicator(),
+              ],
+            ),
+          );
+        },
+      );
+
       await auth.signInWithEmailAndPassword(
         email: emailController.text,
         password: passwordController.text,
       );
+
+      if (auth.currentUser != null) {
+        db.collection('users').doc(auth.currentUser?.uid).get().then((value) {
+          var user = value.data();
+          if (user?["role"] == "admin") {
+            navigate(const HomeAdmin());
+          } else {
+            navigate(const HomeUser());
+          }
+        });
+      }
     } catch (exception) {
-      AlertDialog(
-        content: Text('Something went wrong! $exception'),
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: Text('Something went wrong! $exception'),
+          );
+        },
       );
-    }
-    if (auth.currentUser != null) {
-      db.collection('users').doc(auth.currentUser?.uid).get().then((value) {
-        var user = value.data();
-        if (user?["role"] == "admin") {
-          navigate(const HomeAdmin());
-        } else {
-          navigate(const HomeUser());
-        }
-      });
     }
   }
 
   void navigate(Widget page) {
+    Navigator.of(context).pop();
     Navigator.pushReplacement(
         context, MaterialPageRoute(builder: (context) => page));
   }

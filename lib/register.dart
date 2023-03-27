@@ -28,6 +28,20 @@ class _Login extends State<Register> {
 
   void tryRegister() async {
     try {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                CircularProgressIndicator(),
+              ],
+            ),
+          );
+        },
+      );
+
       await auth.createUserWithEmailAndPassword(
         email: emailController.text,
         password: passwordController.text,
@@ -43,8 +57,13 @@ class _Login extends State<Register> {
 
       db.collection('users').doc(auth.currentUser!.uid).set(user);
     } catch (exception) {
-      AlertDialog(
-        content: Text('Something went wrong! $exception'),
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: Text('Something went wrong! $exception'),
+          );
+        },
       );
     }
 

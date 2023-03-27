@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -9,6 +11,9 @@ class EditForm extends StatefulWidget {
 }
 
 class _EditForm extends State<EditForm> {
+  var db = FirebaseFirestore.instance;
+  var auth = FirebaseAuth.instance;
+
   File? imageFile;
 
   TextEditingController nameController = TextEditingController();
@@ -17,6 +22,78 @@ class _EditForm extends State<EditForm> {
   TextEditingController nikController = TextEditingController();
 
   final ImagePicker picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+
+    db.collection('users').doc(auth.currentUser?.uid).get().then((value) {
+      var data = value.data() as Map<String, dynamic>;
+
+      nameController.text = data['username'];
+      addressController.text = data['address'];
+      phoneController.text = data['phone'].toString();
+      nikController.text = data['NIK'].toString();
+    });
+  }
+
+  void updateProfile(BuildContext context) async {
+    if (nameController.text.isEmpty ||
+        addressController.text.isEmpty ||
+        phoneController.text.isEmpty ||
+        nikController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Mohon isi semua kolom!"),
+          backgroundColor: Colors.indigo,
+        ),
+      );
+    } else {
+      try {
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              content: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  CircularProgressIndicator(),
+                ],
+              ),
+            );
+          },
+        );
+
+        await db.collection('users').doc(auth.currentUser?.uid).update({
+          'username': nameController.text,
+          'address': addressController.text,
+          'phone': phoneController.text,
+          'NIK': nikController.text
+        });
+
+        if (mounted) {
+          Navigator.of(context).pop();
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Profil berhasil diperbarui"),
+              backgroundColor: Colors.indigo,
+            ),
+          );
+        }
+      } catch (exception) {
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              content: Text('Something went wrong! $exception'),
+            );
+          },
+        );
+      }
+    }
+  }
 
   Future getImage(ImageSource media) async {
     var img = await picker.pickImage(source: media);
@@ -119,22 +196,7 @@ class _EditForm extends State<EditForm> {
                       ),
                     ),
                     onPressed: () {
-                      if (nameController.text.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Mohon isi nama kamu"),
-                            backgroundColor: Colors.indigo,
-                          ),
-                        );
-                      } else {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Profil berhasil diperbarui"),
-                            backgroundColor: Colors.indigo,
-                          ),
-                        );
-                      }
+                      updateProfile(context);
                     },
                     child: const Text(
                       "Simpan",
@@ -215,6 +277,30 @@ class _EditForm extends State<EditForm> {
               mainAxisSize: MainAxisSize.max,
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
+                // StreamBuilder(
+                //   stream: db
+                //       .collection('users')
+                //       .doc(auth.currentUser?.uid)
+                //       .snapshots(),
+                //   builder: (context, snapshot) {
+                //     if (snapshot.hasData) {
+                //       var data = snapshot.data?.data() as Map<String, dynamic>;
+
+                //       setState(() {
+                //         nameController.text = data['username'];
+                //         addressController.text = data['address'];
+                //         phoneController.text = data['phone'].toString();
+                //         nikController.text = data['nik'].toString();
+                //       });
+
+                //       return Container();
+                //     }
+
+                //     return const Center(
+                //       child: CircularProgressIndicator(),
+                //     );
+                //   },
+                // ),
                 textInput(
                     "Nama", "Muhammad Sumbul bin Abdul Jalil", nameController),
                 textInput("Alamat", "Jakarta", addressController),
