@@ -40,6 +40,7 @@ class _Profile extends State<Profile> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       child: Column(
         mainAxisSize: MainAxisSize.max,
         children: [

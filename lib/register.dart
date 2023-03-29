@@ -34,6 +34,7 @@ class _Login extends State<Register> {
           return AlertDialog(
             content: Row(
               mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: const [
                 CircularProgressIndicator(),
               ],

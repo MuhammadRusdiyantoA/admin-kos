@@ -23,6 +23,8 @@ class _EditForm extends State<EditForm> {
 
   final ImagePicker picker = ImagePicker();
 
+  void uploadImage() async {}
+
   @override
   void initState() {
     super.initState();
@@ -301,11 +303,10 @@ class _EditForm extends State<EditForm> {
                 //     );
                 //   },
                 // ),
-                textInput(
-                    "Nama", "Muhammad Sumbul bin Abdul Jalil", nameController),
-                textInput("Alamat", "Jakarta", addressController),
-                textInput("No. Handphone", "081234567890", phoneController),
-                textInput("NIK", "30312317823123", nikController),
+                textInput("Nama", "", nameController),
+                textInput("Alamat", "", addressController),
+                textInput("No. Handphone", "", phoneController),
+                textInput("NIK", "", nikController),
               ],
             ),
           )

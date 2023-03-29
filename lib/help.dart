@@ -1,3 +1,6 @@
+import 'package:admin_kos/form_help.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class Help extends StatefulWidget {
@@ -8,13 +11,15 @@ class Help extends StatefulWidget {
 }
 
 class _Help extends State<Help> {
+  var db = FirebaseFirestore.instance;
+  var auth = FirebaseAuth.instance;
+
   late List<bool> isOpen = [];
-  List<List<dynamic>> privacies = [
-    ['Kebijakan privasi', 'Kami tidak akan mengambil data anda.'],
-    ['Kebijakan privasi', 'Kami tidak akan mengambil data anda.'],
-    ['Kebijakan privasi', 'Kami tidak akan mengambil data anda.'],
-    ['Kebijakan privasi', 'Kami tidak akan mengambil data anda.'],
-  ];
+  List<List<dynamic>> privacies = [];
+  late Map<String, dynamic> user;
+  bool isAdmin = false;
+
+  void updateHelpCenter() {}
 
   ExpansionPanel expansive(String title, String body, int index) {
     return ExpansionPanel(
@@ -34,15 +39,34 @@ class _Help extends State<Help> {
   void initState() {
     super.initState();
 
-    for (int i = 0; i < privacies.length; i++) {
-      isOpen.add(false);
-      privacies[i].add(i);
-    }
+    db.collection('users').doc(auth.currentUser!.uid).get().then((value) {
+      var user = value.data() as Map<String, dynamic>;
+      if (user['role'] == "admin") {
+        setState(() {
+          isAdmin = true;
+        });
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: isAdmin
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const FormHelp({}),
+                  ),
+                );
+              },
+              backgroundColor: Colors.indigo,
+              foregroundColor: Colors.white,
+              child: const Icon(Icons.add),
+            )
+          : null,
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Column(
@@ -96,19 +120,95 @@ class _Help extends State<Help> {
                   const SizedBox(
                     height: 16,
                   ),
-                  ExpansionPanelList(
-                    expansionCallback: (panelIndex, isExpanded) {
-                      setState(() {
-                        isOpen[panelIndex] = !isExpanded;
-                      });
+                  StreamBuilder(
+                    stream: db.collection('policy').snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        var data = snapshot.data!.docs
+                            .map((doc) => doc.data())
+                            .toList();
+
+                        for (int i = 0; i < data.length; i++) {
+                          data[i].addAll({"key": snapshot.data!.docs[i].id});
+                        }
+
+                        if (isAdmin) {
+                          return Column(
+                            children: [
+                              for (int i = 0; i < data.length; i++)
+                                TextButton(
+                                  style: ButtonStyle(
+                                    fixedSize: MaterialStatePropertyAll(
+                                      Size.fromHeight(
+                                          MediaQuery.of(context).size.height *
+                                              0.065),
+                                    ),
+                                    side: const MaterialStatePropertyAll(
+                                      BorderSide(
+                                        color: Colors.black26,
+                                        width: 1,
+                                      ),
+                                    ),
+                                    shape: const MaterialStatePropertyAll(
+                                      RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(8),
+                                        ),
+                                      ),
+                                    ),
+                                    foregroundColor:
+                                        const MaterialStatePropertyAll(
+                                            Colors.black54),
+                                  ),
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => FormHelp(data[i]),
+                                      ),
+                                    );
+                                  },
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.max,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(data[i]['title']),
+                                      const Icon(Icons.arrow_forward_outlined)
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          );
+                        } else {
+                          for (int i = 0; i < data.length; i++) {
+                            isOpen.add(false);
+                            data[i].addAll({'index': i});
+                          }
+                          return ExpansionPanelList(
+                            expansionCallback: (panelIndex, isExpanded) {
+                              setState(() {
+                                isOpen[panelIndex] = !isExpanded;
+                              });
+                            },
+                            animationDuration:
+                                const Duration(milliseconds: 250),
+                            children: [
+                              for (int i = 0; i < data.length; i++)
+                                expansive(
+                                  data[i]['title'],
+                                  data[i]['content'],
+                                  data[i]['index'],
+                                )
+                            ],
+                          );
+                        }
+                      }
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
                     },
-                    animationDuration: const Duration(milliseconds: 250),
-                    children: [
-                      for (int i = 0; i < privacies.length; i++)
-                        expansive(
-                            privacies[i][0], privacies[i][1], privacies[i][2])
-                    ],
-                  ),
+                  )
                 ],
               ),
             ),
