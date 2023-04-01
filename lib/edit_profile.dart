@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -13,6 +15,9 @@ class EditForm extends StatefulWidget {
 class _EditForm extends State<EditForm> {
   var db = FirebaseFirestore.instance;
   var auth = FirebaseAuth.instance;
+  var storage = FirebaseStorage.instance.ref();
+
+  var savedInput = [];
 
   File? imageFile;
 
@@ -23,20 +28,9 @@ class _EditForm extends State<EditForm> {
 
   final ImagePicker picker = ImagePicker();
 
-  void uploadImage() async {}
-
   @override
   void initState() {
     super.initState();
-
-    db.collection('users').doc(auth.currentUser?.uid).get().then((value) {
-      var data = value.data() as Map<String, dynamic>;
-
-      nameController.text = data['username'];
-      addressController.text = data['address'];
-      phoneController.text = data['phone'].toString();
-      nikController.text = data['NIK'].toString();
-    });
   }
 
   void updateProfile(BuildContext context) async {
@@ -66,6 +60,13 @@ class _EditForm extends State<EditForm> {
             );
           },
         );
+
+        // if (imageFile != null) {
+        //   storage
+        //       .child('avatars')
+        //       .child(DateTime.now().millisecondsSinceEpoch.toString())
+        //       .putFile(File(imageFile!.path));
+        // }
 
         await db.collection('users').doc(auth.currentUser?.uid).update({
           'username': nameController.text,
@@ -98,6 +99,20 @@ class _EditForm extends State<EditForm> {
   }
 
   Future getImage(ImageSource media) async {
+    if (savedInput.isEmpty) {
+      savedInput.addAll([
+        nameController.text,
+        addressController.text,
+        phoneController.text,
+        nikController.text
+      ]);
+    } else {
+      savedInput[0] = nameController.text;
+      savedInput[1] = addressController.text;
+      savedInput[2] = phoneController.text;
+      savedInput[3] = nikController.text;
+    }
+
     var img = await picker.pickImage(source: media);
 
     setState(() {
@@ -146,6 +161,22 @@ class _EditForm extends State<EditForm> {
 
   @override
   Widget build(BuildContext context) {
+    db.collection('users').doc(auth.currentUser?.uid).get().then((value) {
+      var data = value.data() as Map<String, dynamic>;
+
+      if (savedInput.isEmpty) {
+        nameController.text = data['username'];
+        addressController.text = data['address'];
+        phoneController.text = data['phone'].toString();
+        nikController.text = data['NIK'].toString();
+      } else {
+        nameController.text = savedInput[0];
+        addressController.text = savedInput[1];
+        phoneController.text = savedInput[2];
+        nikController.text = savedInput[3];
+      }
+    });
+
     return Scaffold(
       body: Column(
         mainAxisSize: MainAxisSize.max,
@@ -219,24 +250,24 @@ class _EditForm extends State<EditForm> {
                 Container(
                   width: 72,
                   height: 72,
-                  decoration: const BoxDecoration(
-                    image: // imageFile != null
-                        //     ? DecorationImage(
-                        //         image: FileImage(imageFile!),
-                        //         fit: BoxFit.cover,
-                        //         colorFilter: const ColorFilter.mode(
-                        //           Colors.black38,
-                        //           BlendMode.darken,
-                        //         ),
-                        //       ) :
-                        DecorationImage(
-                      image: AssetImage('assets/images/dummyProfile.jpg'),
-                      fit: BoxFit.cover,
-                      colorFilter: ColorFilter.mode(
-                        Colors.black38,
-                        BlendMode.darken,
-                      ),
-                    ),
+                  decoration: BoxDecoration(
+                    image: imageFile != null
+                        ? DecorationImage(
+                            image: NetworkImage(imageFile!.path),
+                            fit: BoxFit.cover,
+                            colorFilter: const ColorFilter.mode(
+                              Colors.black38,
+                              BlendMode.darken,
+                            ),
+                          )
+                        : const DecorationImage(
+                            image: AssetImage('assets/images/dummyProfile.jpg'),
+                            fit: BoxFit.cover,
+                            colorFilter: ColorFilter.mode(
+                              Colors.black38,
+                              BlendMode.darken,
+                            ),
+                          ),
                     shape: BoxShape.circle,
                   ),
                   child: TextButton(

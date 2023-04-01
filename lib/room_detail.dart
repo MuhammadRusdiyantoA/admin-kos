@@ -1,3 +1,8 @@
+import 'package:admin_kos/add_room.dart';
+import 'package:admin_kos/dash_admin.dart';
+import 'package:admin_kos/home_admin.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class RoomDetail extends StatefulWidget {
@@ -5,23 +10,77 @@ class RoomDetail extends StatefulWidget {
   final int roomNum;
   final String roomStat;
   final String roomOwner;
-  final List<String> facilities;
-  final List<String> roomSpec;
-  final List<String> bathSpec;
+  final List<dynamic> facilities;
+  final List<dynamic> roomSpec;
+  final List<dynamic> bathSpec;
   final bool isAdmin;
   final int invoice;
+  final String roomKey;
 
-  const RoomDetail(this.roomImg, this.roomNum, this.roomStat, this.roomOwner,
-      this.facilities, this.roomSpec, this.bathSpec,
-      {super.key, this.isAdmin = false, this.invoice = 0});
+  const RoomDetail(
+    this.roomImg,
+    this.roomNum,
+    this.roomStat,
+    this.roomOwner,
+    this.facilities,
+    this.roomSpec,
+    this.bathSpec, {
+    super.key,
+    this.isAdmin = false,
+    this.invoice = 0,
+    this.roomKey = "",
+  });
 
   @override
   _RoomDetail createState() => _RoomDetail();
 }
 
 class _RoomDetail extends State<RoomDetail> {
+  var db = FirebaseFirestore.instance;
+  var auth = FirebaseAuth.instance;
+
   String curUser = "Muhammad Sumbul bin Abdul Jalil";
   bool check = false;
+
+  void updateRoom() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AddRoom(),
+      ),
+    );
+  }
+
+  void deleteRoom() async {
+    try {
+      await db.collection('rooms').doc(widget.roomKey).delete();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Kamar berhasil dihapus!'),
+            backgroundColor: Colors.indigo,
+          ),
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const HomeAdmin(),
+          ),
+        );
+      }
+    } catch (exception) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: Text('Something went wrong! $exception'),
+          );
+        },
+      );
+    }
+  }
 
   @override
   void initState() {
@@ -44,24 +103,82 @@ class _RoomDetail extends State<RoomDetail> {
           mainAxisSize: MainAxisSize.max,
           children: [
             Container(
-              alignment: Alignment.topLeft,
-              height: MediaQuery.of(context).size.height * 0.5,
-              width: MediaQuery.of(context).size.width,
-              decoration: BoxDecoration(
-                image:
-                    DecorationImage(image: widget.roomImg, fit: BoxFit.cover),
-              ),
-              child: IconButton(
-                iconSize: 24,
-                icon: const Icon(
-                  Icons.arrow_back_outlined,
-                  color: Colors.white,
+                alignment: Alignment.topLeft,
+                height: MediaQuery.of(context).size.height * 0.5,
+                width: MediaQuery.of(context).size.width,
+                decoration: BoxDecoration(
+                  image:
+                      DecorationImage(image: widget.roomImg, fit: BoxFit.cover),
                 ),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-              ),
-            ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      iconSize: 24,
+                      icon: const Icon(
+                        Icons.arrow_back_outlined,
+                        color: Colors.white,
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                    widget.isAdmin
+                        ? Row(
+                            children: [
+                              IconButton(
+                                iconSize: 24,
+                                icon: const Icon(
+                                  Icons.delete,
+                                  color: Colors.red,
+                                ),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return AlertDialog(
+                                        title: Text(
+                                            'Yakin ingin menghapus kamar ${widget.roomNum}?'),
+                                        actions: [
+                                          TextButton(
+                                            style: const ButtonStyle(
+                                              foregroundColor:
+                                                  MaterialStatePropertyAll(
+                                                      Colors.red),
+                                            ),
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                            },
+                                            child: const Text('Tidak'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              deleteRoom();
+                                            },
+                                            child: const Text('Yakin'),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                              IconButton(
+                                iconSize: 24,
+                                icon: const Icon(
+                                  Icons.edit,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                              ),
+                            ],
+                          )
+                        : Row(),
+                  ],
+                )),
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               padding: const EdgeInsets.only(bottom: 12),
@@ -145,17 +262,29 @@ class _RoomDetail extends State<RoomDetail> {
               ),
             ),
             check
-                ? OwnedRoom(
-                    widget.roomImg,
-                    widget.roomNum,
-                    widget.roomStat,
-                    widget.roomOwner,
-                    widget.facilities,
-                    widget.roomSpec,
-                    widget.bathSpec,
-                    isAdmin: widget.isAdmin,
-                    invoice: widget.invoice,
-                  )
+                ? widget.roomOwner != "Kosong"
+                    ? OwnedRoom(
+                        widget.roomImg,
+                        widget.roomNum,
+                        widget.roomStat,
+                        widget.roomOwner,
+                        widget.facilities,
+                        widget.roomSpec,
+                        widget.bathSpec,
+                        isAdmin: widget.isAdmin,
+                        invoice: widget.invoice,
+                      )
+                    : UnownedRoom(
+                        widget.roomImg,
+                        widget.roomNum,
+                        widget.roomStat,
+                        widget.roomOwner,
+                        widget.facilities,
+                        widget.roomSpec,
+                        widget.bathSpec,
+                        isAdmin: widget.isAdmin,
+                        invoice: widget.invoice,
+                      )
                 : UnownedRoom(
                     widget.roomImg,
                     widget.roomNum,
@@ -179,9 +308,9 @@ class OwnedRoom extends StatefulWidget {
   final int roomNum;
   final String roomStat;
   final String roomOwner;
-  final List<String> facilities;
-  final List<String> roomSpec;
-  final List<String> bathSpec;
+  final List<dynamic> facilities;
+  final List<dynamic> roomSpec;
+  final List<dynamic> bathSpec;
   final bool isAdmin;
   final int invoice;
 
@@ -227,11 +356,81 @@ class _OwnedRoom extends State<OwnedRoom> {
     }
   }
 
+  bool adminFixTime = true;
+
+  Widget adminFixDialog() {
+    var screenSize = MediaQuery.of(context).size;
+
+    return Container(
+      width: screenSize.width - 32,
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.indigo[100],
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          const Text(
+            'Kapan anda akan memperbaikinya?',
+            style: TextStyle(
+              fontSize: 20,
+            ),
+          ),
+          RadioListTile(
+            title: const Text("Hari ini"),
+            value: true,
+            groupValue: adminFixTime,
+            onChanged: (value) {
+              setState(() {
+                adminFixTime = value as bool;
+              });
+            },
+          ),
+          RadioListTile(
+            title: const Text("Besok"),
+            value: false,
+            groupValue: adminFixTime,
+            onChanged: (value) {
+              setState(() {
+                adminFixTime = value as bool;
+              });
+            },
+          ),
+          SizedBox(
+            height: 40,
+            width: MediaQuery.of(context).size.width - 64,
+            child: TextButton(
+              style: ButtonStyle(
+                shape: MaterialStatePropertyAll(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                ),
+                backgroundColor: const MaterialStatePropertyAll(Colors.indigo),
+                foregroundColor: const MaterialStatePropertyAll(Colors.white),
+                padding: MaterialStatePropertyAll(
+                  EdgeInsets.symmetric(
+                      horizontal: MediaQuery.of(context).size.width * 0.2),
+                ),
+              ),
+              onPressed: () {},
+              child: const Text('Kirim'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    var screenSize = MediaQuery.of(context).size;
+
     return Container(
       width: MediaQuery.of(context).size.width,
-      height: MediaQuery.of(context).size.height * 0.75,
+      height: widget.isAdmin
+          ? MediaQuery.of(context).size.height
+          : screenSize.height * 0.75,
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -321,67 +520,65 @@ class _OwnedRoom extends State<OwnedRoom> {
                 children: widget.isAdmin
                     ? widget.roomOwner != "Kosong"
                         ? [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration:
-                                  BoxDecoration(color: Colors.indigo[200]),
-                              child: Column(
-                                children: const [
-                                  Text('Kapan anda akan memperbaikinya?'),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              width: MediaQuery.of(context).size.width - 32,
-                              child: Column(
-                                children: [
-                                  Row(
-                                    mainAxisSize: MainAxisSize.max,
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
+                            Column(
+                              children: [
+                                adminFixDialog(),
+                                Container(
+                                  margin: const EdgeInsets.only(top: 24),
+                                  width: MediaQuery.of(context).size.width - 32,
+                                  child: Column(
                                     children: [
-                                      const Text('Tagihan'),
-                                      Text(
-                                        '${widget.invoice}',
-                                        style: const TextStyle(
-                                          color: Colors.red,
-                                        ),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.max,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const Text('Tagihan'),
+                                          Text(
+                                            '${widget.invoice}',
+                                            style: const TextStyle(
+                                              color: Colors.red,
+                                            ),
+                                          ),
+                                        ],
                                       ),
+                                      Container(
+                                        margin: const EdgeInsets.only(top: 16),
+                                        height: 48,
+                                        width:
+                                            MediaQuery.of(context).size.width -
+                                                32,
+                                        child: TextButton(
+                                          style: ButtonStyle(
+                                            shape: MaterialStatePropertyAll(
+                                              RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(24),
+                                              ),
+                                            ),
+                                            backgroundColor:
+                                                const MaterialStatePropertyAll(
+                                                    Colors.indigo),
+                                            foregroundColor:
+                                                const MaterialStatePropertyAll(
+                                                    Colors.white),
+                                            padding: MaterialStatePropertyAll(
+                                              EdgeInsets.symmetric(
+                                                  horizontal:
+                                                      MediaQuery.of(context)
+                                                              .size
+                                                              .width *
+                                                          0.2),
+                                            ),
+                                          ),
+                                          onPressed: () {},
+                                          child: const Text('Minta Tagihan'),
+                                        ),
+                                      )
                                     ],
                                   ),
-                                  Container(
-                                    margin: const EdgeInsets.only(top: 16),
-                                    height: 48,
-                                    width:
-                                        MediaQuery.of(context).size.width - 32,
-                                    child: TextButton(
-                                      style: ButtonStyle(
-                                        shape: MaterialStatePropertyAll(
-                                          RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(24),
-                                          ),
-                                        ),
-                                        backgroundColor:
-                                            const MaterialStatePropertyAll(
-                                                Colors.indigo),
-                                        foregroundColor:
-                                            const MaterialStatePropertyAll(
-                                                Colors.white),
-                                        padding: MaterialStatePropertyAll(
-                                          EdgeInsets.symmetric(
-                                              horizontal: MediaQuery.of(context)
-                                                      .size
-                                                      .width *
-                                                  0.2),
-                                        ),
-                                      ),
-                                      onPressed: () {},
-                                      child: const Text('Minta Tagihan'),
-                                    ),
-                                  )
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ]
                         : []
@@ -389,116 +586,142 @@ class _OwnedRoom extends State<OwnedRoom> {
                         Column(
                           children: [
                             SizedBox(
-                              height: 48,
-                              width: MediaQuery.of(context).size.width * 0.425,
-                              child: TextButton(
-                                style: ButtonStyle(
-                                  shape: MaterialStatePropertyAll(
-                                    RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(24),
-                                      side: BorderSide(
-                                        color: submitted
-                                            ? Colors.black
-                                            : Colors.black38,
-                                        width: 2,
+                              width: screenSize.width - 32,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  SizedBox(
+                                    height: 48,
+                                    width: MediaQuery.of(context).size.width *
+                                        0.425,
+                                    child: TextButton(
+                                      style: ButtonStyle(
+                                        shape: MaterialStatePropertyAll(
+                                          RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(24),
+                                            side: BorderSide(
+                                              color: submitted
+                                                  ? Colors.black
+                                                  : Colors.black38,
+                                              width: 2,
+                                            ),
+                                          ),
+                                        ),
+                                        foregroundColor:
+                                            MaterialStatePropertyAll(
+                                          submitted
+                                              ? Colors.black
+                                              : Colors.black45,
+                                        ),
                                       ),
+                                      onPressed: submitted
+                                          ? () {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                const SnackBar(
+                                                  content: Text(
+                                                    'Laporan kerusakan berhasil diubah!',
+                                                  ),
+                                                  backgroundColor:
+                                                      Colors.indigo,
+                                                ),
+                                              );
+                                            }
+                                          : null,
+                                      child: const Text('Edit'),
                                     ),
                                   ),
-                                  foregroundColor: MaterialStatePropertyAll(
-                                    submitted ? Colors.black : Colors.black45,
-                                  ),
-                                ),
-                                onPressed: submitted
-                                    ? () {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              'Laporan kerusakan berhasil diubah!',
+                                  SizedBox(
+                                    height: 48,
+                                    width: MediaQuery.of(context).size.width *
+                                        0.425,
+                                    child: TextButton(
+                                      style: ButtonStyle(
+                                        shape: MaterialStatePropertyAll(
+                                          RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(24),
+                                            side: const BorderSide(
+                                              color: Colors.black38,
+                                              width: 1,
                                             ),
-                                            backgroundColor: Colors.indigo,
                                           ),
-                                        );
-                                      }
-                                    : null,
-                                child: const Text('Edit'),
+                                        ),
+                                        backgroundColor:
+                                            MaterialStatePropertyAll(
+                                          getColor()[0],
+                                        ),
+                                        foregroundColor:
+                                            MaterialStatePropertyAll(
+                                          getColor()[1],
+                                        ),
+                                      ),
+                                      onPressed:
+                                          (anySelected() && submitable) &&
+                                                  !submitted
+                                              ? () {
+                                                  setState(() {
+                                                    submitted = !submitted;
+                                                  });
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                          'Laporan kerusakan berhasil dikirimkan!'),
+                                                      backgroundColor:
+                                                          Colors.indigo,
+                                                    ),
+                                                  );
+                                                }
+                                              : null,
+                                      child: Text(
+                                          submitted ? 'Terkirim' : 'Kirim'),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            SizedBox(
+                            Container(
+                              margin: const EdgeInsets.only(top: 16),
                               height: 48,
-                              width: MediaQuery.of(context).size.width * 0.425,
+                              width: MediaQuery.of(context).size.width - 32,
                               child: TextButton(
                                 style: ButtonStyle(
                                   shape: MaterialStatePropertyAll(
                                     RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(24),
-                                      side: const BorderSide(
-                                        color: Colors.black38,
-                                        width: 1,
-                                      ),
                                     ),
                                   ),
-                                  backgroundColor: MaterialStatePropertyAll(
-                                    getColor()[0],
-                                  ),
-                                  foregroundColor: MaterialStatePropertyAll(
-                                    getColor()[1],
+                                  backgroundColor:
+                                      const MaterialStatePropertyAll(
+                                          Colors.green),
+                                  foregroundColor:
+                                      const MaterialStatePropertyAll(
+                                          Colors.white),
+                                  padding: MaterialStatePropertyAll(
+                                    EdgeInsets.symmetric(
+                                        horizontal:
+                                            MediaQuery.of(context).size.width *
+                                                0.2),
                                   ),
                                 ),
-                                onPressed:
-                                    (anySelected() && submitable) && !submitted
-                                        ? () {
-                                            setState(() {
-                                              submitted = !submitted;
-                                            });
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              const SnackBar(
-                                                content: Text(
-                                                    'Laporan kerusakan berhasil dikirimkan!'),
-                                                backgroundColor: Colors.indigo,
-                                              ),
-                                            );
-                                          }
-                                        : null,
-                                child: Text(submitted ? 'Terkirim' : 'Kirim'),
+                                onPressed: () {},
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
+                                  children: const [
+                                    Icon(Icons.phone),
+                                    Text('Konsultasi lewat Whatsapp')
+                                  ],
+                                ),
                               ),
                             ),
                           ],
                         ),
-                        Container(
-                          margin: const EdgeInsets.only(top: 16),
-                          height: 48,
-                          width: MediaQuery.of(context).size.width - 32,
-                          child: TextButton(
-                            style: ButtonStyle(
-                              shape: MaterialStatePropertyAll(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(24),
-                                ),
-                              ),
-                              backgroundColor:
-                                  const MaterialStatePropertyAll(Colors.green),
-                              foregroundColor:
-                                  const MaterialStatePropertyAll(Colors.white),
-                              padding: MaterialStatePropertyAll(
-                                EdgeInsets.symmetric(
-                                    horizontal:
-                                        MediaQuery.of(context).size.width *
-                                            0.2),
-                              ),
-                            ),
-                            onPressed: () {},
-                            child: Row(
-                              mainAxisSize: MainAxisSize.max,
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: const [
-                                Icon(Icons.phone),
-                                Text('Konsultasi lewat Whatsapp')
-                              ],
-                            ),
-                          ),
-                        )
                       ],
               ),
             ],
@@ -514,9 +737,9 @@ class UnownedRoom extends StatefulWidget {
   final int roomNum;
   final String roomStat;
   final String roomOwner;
-  final List<String> facilities;
-  final List<String> roomSpec;
-  final List<String> bathSpec;
+  final List<dynamic> facilities;
+  final List<dynamic> roomSpec;
+  final List<dynamic> bathSpec;
   final bool isAdmin;
   final int invoice;
 
@@ -653,7 +876,9 @@ class _UnownedRoom extends State<UnownedRoom> {
         ),
         Container(
           width: MediaQuery.of(context).size.width - 32,
-          height: MediaQuery.of(context).size.height * 0.175,
+          height: !widget.isAdmin
+              ? MediaQuery.of(context).size.height * 0.175
+              : MediaQuery.of(context).size.height * 0.175 / 2,
           margin: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 32,
@@ -662,39 +887,44 @@ class _UnownedRoom extends State<UnownedRoom> {
             mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              SizedBox(
-                height: MediaQuery.of(context).size.height * 0.075,
-                width: MediaQuery.of(context).size.width,
-                child: TextButton(
-                  style: ButtonStyle(
-                    backgroundColor: MaterialStatePropertyAll(
-                      getBookingColor()[0],
-                    ),
-                    foregroundColor: MaterialStatePropertyAll(
-                      getBookingColor()[1],
-                    ),
-                    shape: MaterialStatePropertyAll(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                    ),
-                  ),
-                  onPressed: (widget.roomStat == "Kosong" && !booked)
-                      ? () {
-                          setState(() {
-                            booked = !booked;
-                          });
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Kamar berhasil di-booking!'),
-                              backgroundColor: Colors.indigo,
+              !widget.isAdmin
+                  ? SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.075,
+                      width: MediaQuery.of(context).size.width,
+                      child: TextButton(
+                        style: ButtonStyle(
+                          backgroundColor: MaterialStatePropertyAll(
+                            getBookingColor()[0],
+                          ),
+                          foregroundColor: MaterialStatePropertyAll(
+                            getBookingColor()[1],
+                          ),
+                          shape: MaterialStatePropertyAll(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
                             ),
-                          );
-                        }
-                      : null,
-                  child: const Text('Booking'),
-                ),
-              ),
+                          ),
+                        ),
+                        onPressed: (widget.roomStat == "Kosong" && !booked)
+                            ? () {
+                                setState(() {
+                                  booked = !booked;
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Kamar berhasil di-booking!'),
+                                    backgroundColor: Colors.indigo,
+                                  ),
+                                );
+                              }
+                            : null,
+                        child: const Text('Booking'),
+                      ),
+                    )
+                  : const SizedBox(
+                      height: 0,
+                      width: 0,
+                    ),
               SizedBox(
                 height: MediaQuery.of(context).size.height * 0.075,
                 width: MediaQuery.of(context).size.width,

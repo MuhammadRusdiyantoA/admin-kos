@@ -136,46 +136,51 @@ class _Help extends State<Help> {
                           return Column(
                             children: [
                               for (int i = 0; i < data.length; i++)
-                                TextButton(
-                                  style: ButtonStyle(
-                                    fixedSize: MaterialStatePropertyAll(
-                                      Size.fromHeight(
-                                          MediaQuery.of(context).size.height *
-                                              0.065),
-                                    ),
-                                    side: const MaterialStatePropertyAll(
-                                      BorderSide(
-                                        color: Colors.black26,
-                                        width: 1,
+                                Container(
+                                  margin:
+                                      const EdgeInsets.symmetric(vertical: 8),
+                                  child: TextButton(
+                                    style: ButtonStyle(
+                                      fixedSize: MaterialStatePropertyAll(
+                                        Size.fromHeight(
+                                            MediaQuery.of(context).size.height *
+                                                0.065),
                                       ),
-                                    ),
-                                    shape: const MaterialStatePropertyAll(
-                                      RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.all(
-                                          Radius.circular(8),
+                                      side: const MaterialStatePropertyAll(
+                                        BorderSide(
+                                          color: Colors.black26,
+                                          width: 1,
                                         ),
                                       ),
-                                    ),
-                                    foregroundColor:
-                                        const MaterialStatePropertyAll(
-                                            Colors.black54),
-                                  ),
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => FormHelp(data[i]),
+                                      shape: const MaterialStatePropertyAll(
+                                        RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.all(
+                                            Radius.circular(8),
+                                          ),
+                                        ),
                                       ),
-                                    );
-                                  },
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.max,
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(data[i]['title']),
-                                      const Icon(Icons.arrow_forward_outlined)
-                                    ],
+                                      foregroundColor:
+                                          const MaterialStatePropertyAll(
+                                              Colors.black54),
+                                    ),
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              FormHelp(data[i]),
+                                        ),
+                                      );
+                                    },
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.max,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(data[i]['title']),
+                                        const Icon(Icons.arrow_forward_outlined)
+                                      ],
+                                    ),
                                   ),
                                 ),
                             ],

@@ -26,12 +26,13 @@ class Room extends StatelessWidget {
   final String type;
   final int roomNum;
   final String roomStat;
-  final List<String> facilities;
-  final List<String> roomSpec;
-  final List<String> bathSpec;
+  final List<dynamic> facilities;
+  final List<dynamic> roomSpec;
+  final List<dynamic> bathSpec;
   final String roomOwner;
   final bool isAdmin;
   final int invoice;
+  final String roomKey;
 
   const Room(
     this.roomImg,
@@ -45,6 +46,7 @@ class Room extends StatelessWidget {
     this.roomOwner = "Kosong",
     this.isAdmin = false,
     this.invoice = 0,
+    this.roomKey = "",
   });
 
   @override
@@ -72,6 +74,7 @@ class Room extends StatelessWidget {
                 bathSpec,
                 isAdmin: isAdmin,
                 invoice: invoice,
+                roomKey: roomKey,
               ),
             ),
           );

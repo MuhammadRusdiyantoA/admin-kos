@@ -76,146 +76,46 @@ class _DashAdmin extends State<DashAdmin> {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: GridView.count(
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              mainAxisSpacing: 24,
-              crossAxisSpacing: 24,
-              crossAxisCount: 2,
-              children: const [
-                Room(
-                  AssetImage('assets/images/kamar_2.jpg'),
-                  "Premium",
-                  1,
-                  "Terisi",
-                  [
-                    'Kasur',
-                    'Lemari',
-                    'Meja Belajar',
-                    'Kursi',
-                    'AC',
-                    'TV',
-                    'Bantal',
-                    'Guling'
-                  ],
-                  ['5x4 meter', 'Termasuk Listrik', 'Termasuk Katering'],
-                  [
-                    'KM. dalam',
-                    'Kloset duduk',
-                    'Shower',
-                    'Air Hangat',
-                  ],
-                  roomOwner: "Finna Nasywa",
-                  isAdmin: true,
-                  invoice: 150000,
-                ),
-                Room(
-                  AssetImage('assets/images/kamar_1.jpg'),
-                  "Premium",
-                  2,
-                  "Terisi",
-                  [
-                    'Kasur',
-                    'Lemari',
-                    'Meja Belajar',
-                    'Kursi',
-                    'AC',
-                    'TV',
-                    'Bantal',
-                    'Guling'
-                  ],
-                  [
-                    '6x4 meter',
-                    'Termasuk Listrik',
-                    'Termasuk Laundry',
-                  ],
-                  [
-                    'KM. dalam',
-                    'Kloset duduk',
-                    'Shower',
-                  ],
-                  roomOwner: "Nizar Ali",
-                  isAdmin: true,
-                  invoice: 0,
-                ),
-                Room(
-                  AssetImage('assets/images/kamar_3.jpg'),
-                  "Standar",
-                  3,
-                  "Kosong",
-                  [
-                    'Kasur',
-                    'Lemari',
-                    'Meja Belajar',
-                    'Kursi',
-                    'Bantal',
-                    'Guling'
-                  ],
-                  [
-                    '4x3 meter',
-                    'Termasuk Listrik',
-                  ],
-                  [
-                    'KM. dalam',
-                    'Kloset jongkok',
-                    'Ember mandi',
-                    'Gayung mandi'
-                  ],
-                  isAdmin: true,
-                ),
-                Room(
-                  AssetImage('assets/images/kamar_2.jpg'),
-                  "Standar",
-                  4,
-                  "Terisi",
-                  [
-                    'Kasur',
-                    'Lemari',
-                    'Meja Belajar',
-                    'Kursi',
-                    'Bantal',
-                    'Guling'
-                  ],
-                  [
-                    '4x3 meter',
-                    'Termasuk Listrik',
-                    'Termasuk Laundry',
-                  ],
-                  ['KM. dalam', 'Kloset duduk', 'Ember mandi', 'Gayung mandi'],
-                  roomOwner: "Naswa Bila",
-                  isAdmin: true,
-                  invoice: 50000,
-                ),
-                Room(
-                  AssetImage('assets/images/kamar_3.jpg'),
-                  "Standar",
-                  5,
-                  "Kosong",
-                  [
-                    'Kasur',
-                    'Lemari',
-                    'Meja Belajar',
-                    'Kursi',
-                    'Bantal',
-                    'Guling'
-                  ],
-                  [
-                    '4x3 meter',
-                    'Termasuk Listrik',
-                  ],
-                  [
-                    'KM. dalam',
-                    'Kloset jongkok',
-                    'Ember mandi',
-                    'Gayung mandi'
-                  ],
-                  isAdmin: true,
-                ),
-              ],
-            ),
-          )
+          StreamBuilder(
+            stream: db.collection('rooms').snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                var data = snapshot.data!.docs.map((e) => e.data()).toList();
+
+                for (int i = 0; i < data.length; i++) {
+                  data[i].addAll({"key": snapshot.data!.docs[i].id});
+                }
+
+                return Container(
+                  padding: const EdgeInsets.all(16),
+                  child: GridView.count(
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    mainAxisSpacing: 24,
+                    crossAxisSpacing: 24,
+                    crossAxisCount: 2,
+                    children: [
+                      for (var i = 0; i < data.length; i++)
+                        Room(
+                          AssetImage(data[i]['image']),
+                          data[i]['type'],
+                          data[i]['room_num'],
+                          data[i]['status'],
+                          data[i]['facilities'],
+                          data[i]['specifications'],
+                          data[i]['bath_spec'],
+                          isAdmin: true,
+                          invoice: data[i]['invoice'],
+                          roomOwner: data[i]['owner'],
+                          roomKey: data[i]['key'],
+                        )
+                    ],
+                  ),
+                );
+              }
+              return const CircularProgressIndicator();
+            },
+          ),
         ],
       ),
     );

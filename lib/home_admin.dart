@@ -1,3 +1,4 @@
+import 'package:admin_kos/add_room.dart';
 import 'package:admin_kos/dashboard.dart';
 import 'package:admin_kos/about.dart';
 import 'package:admin_kos/profile.dart';
@@ -22,6 +23,21 @@ class _HomeAdmin extends State<HomeAdmin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: index == 0
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AddRoom(),
+                  ),
+                );
+              },
+              foregroundColor: Colors.white,
+              backgroundColor: Colors.indigo,
+              child: const Icon(Icons.add),
+            )
+          : null,
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(
