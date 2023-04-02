@@ -24,6 +24,7 @@ class _About extends State<About> {
         return AlertDialog(
           content: Row(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: const [
               CircularProgressIndicator(),
             ],
@@ -41,6 +42,8 @@ class _About extends State<About> {
           backgroundColor: Colors.indigo,
         ),
       );
+
+      Navigator.pop(context);
     }).catchError((error) {
       AlertDialog(
         content: Text('Something went wrong! $error'),

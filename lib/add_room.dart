@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class AddRoom extends StatefulWidget {
-  const AddRoom({super.key});
+  final dynamic formData;
+
+  const AddRoom({super.key, this.formData = false});
 
   @override
   _AddRoom createState() => _AddRoom();
@@ -20,11 +22,32 @@ class _AddRoom extends State<AddRoom> {
   TextEditingController facilities = TextEditingController();
   TextEditingController roomSpec = TextEditingController();
   TextEditingController bathSpec = TextEditingController();
+  TextEditingController invoice = TextEditingController();
 
-  List<String> roomTypeList = ["Standar", "Premium"];
-  var selectedRoomType;
+  dynamic selectedRoomType;
+  dynamic selectedUser;
 
-  void createRoom() async {
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.formData != false) {
+      roomNum.text = widget.formData['room_num'].toString();
+      invoice.text = widget.formData['invoice'].toString();
+      selectedRoomType = widget.formData['type'];
+      selectedUser = widget.formData['owner'];
+
+      List<dynamic> facilitiesList = widget.formData['facilities'];
+      List<dynamic> roomSpecList = widget.formData['specifications'];
+      List<dynamic> bathSpecList = widget.formData['bath_spec'];
+
+      facilities.text = facilitiesList.join(", ");
+      roomSpec.text = roomSpecList.join(", ");
+      bathSpec.text = bathSpecList.join(", ");
+    }
+  }
+
+  void setRoom() async {
     try {
       showDialog(
         context: context,
@@ -58,27 +81,56 @@ class _AddRoom extends State<AddRoom> {
 
       var random = Random().nextInt(3) + 1;
 
-      await db.collection('rooms').add({
-        "image": "assets/images/kamar_$random.jpg",
-        "type": selectedRoomType,
-        "room_num": int.parse(roomNum.text),
-        "status": "Kosong",
-        "facilities": facilitiesList,
-        "specifications": roomSpecList,
-        "bath_spec": bathSpecList,
-        "owner": "Kosong",
-        "invoice": 0
-      });
+      String status = selectedUser == "Kosong" ? "Kosong" : "Terisi";
 
-      if (mounted) {
-        Navigator.of(context).pop();
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Kamar berhasil ditambahkan!"),
-            backgroundColor: Colors.indigo,
-          ),
-        );
+      if (widget.formData != false) {
+        await db.collection('rooms').doc(widget.formData['key']).update({
+          "type": selectedRoomType,
+          "room_num": int.parse(roomNum.text),
+          "status": status,
+          "facilities": facilitiesList,
+          "specifications": roomSpecList,
+          "bath_spec": bathSpecList,
+          "owner": selectedUser,
+          "invoice": int.parse(invoice.text)
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Kamar berhasil diubah!"),
+              backgroundColor: Colors.indigo,
+            ),
+          );
+
+          Navigator.of(context).pop();
+          Navigator.pop(context);
+          Navigator.pop(context);
+        }
+      } else {
+        await db.collection('rooms').add({
+          "image": "assets/images/kamar_$random.jpg",
+          "type": selectedRoomType,
+          "room_num": int.parse(roomNum.text),
+          "status": "Kosong",
+          "facilities": facilitiesList,
+          "specifications": roomSpecList,
+          "bath_spec": bathSpecList,
+          "owner": "Kosong",
+          "invoice": 0
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Kamar berhasil ditambahkan!"),
+              backgroundColor: Colors.indigo,
+            ),
+          );
+
+          Navigator.of(context).pop();
+          Navigator.pop(context);
+        }
       }
     } catch (exception) {
       showDialog(
@@ -139,9 +191,11 @@ class _AddRoom extends State<AddRoom> {
                         color: Colors.white,
                       ),
                     ),
-                    const Text(
-                      "Tambah Kamar Baru",
-                      style: TextStyle(
+                    Text(
+                      widget.formData != false
+                          ? "Edit Kamar ${widget.formData['room_num']}"
+                          : "Tambah Kamar Baru",
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 24,
                         fontWeight: FontWeight.w300,
@@ -165,14 +219,14 @@ class _AddRoom extends State<AddRoom> {
                   hint: const Text("Tipe kamar"),
                   isExpanded: true,
                   value: selectedRoomType,
-                  items: [
+                  items: const [
                     DropdownMenuItem(
-                      value: roomTypeList[0],
-                      child: const Text('Standar'),
+                      value: "Standar",
+                      child: Text('Standar'),
                     ),
                     DropdownMenuItem(
-                      value: roomTypeList[1],
-                      child: const Text('Premium'),
+                      value: "Premium",
+                      child: Text('Premium'),
                     ),
                   ],
                   onChanged: (value) {
@@ -181,6 +235,52 @@ class _AddRoom extends State<AddRoom> {
                     });
                   },
                 ),
+                SizedBox(
+                  height:
+                      widget.formData != false ? screenSize.height * 0.025 : 0,
+                ),
+                widget.formData != false
+                    ? StreamBuilder(
+                        stream: db.collection('users').snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            var data = snapshot.data!.docs
+                                .map((e) => e.data())
+                                .toList();
+
+                            for (var i = 0; i < data.length; i++) {
+                              data[i]
+                                  .addAll({'key': snapshot.data!.docs[i].id});
+                            }
+
+                            return DropdownButton(
+                              isExpanded: true,
+                              value: selectedUser,
+                              items: [
+                                const DropdownMenuItem(
+                                  value: "Kosong",
+                                  child: Text("Kosong"),
+                                ),
+                                for (var i = 0; i < data.length; i++)
+                                  DropdownMenuItem(
+                                    value: data[i]['key'],
+                                    child: Text(data[i]['username']),
+                                  )
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  selectedUser = value!;
+                                });
+                              },
+                            );
+                          }
+
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        },
+                      )
+                    : Row(),
                 SizedBox(
                   height: screenSize.height * 0.025,
                 ),
@@ -200,7 +300,13 @@ class _AddRoom extends State<AddRoom> {
                           "Note: Pisahkan setiap fasilitas dan spesifikasi dengan tanda koma (contoh: 'Kasur, Meja Belajar, AC,...')")
                     ],
                   ),
-                )
+                ),
+                SizedBox(
+                  height: screenSize.height * 0.025,
+                ),
+                widget.formData != false
+                    ? userInput("Tagihan (Rupiah)", invoice, isNumber: true)
+                    : Row()
               ],
             ),
           ),
@@ -218,7 +324,7 @@ class _AddRoom extends State<AddRoom> {
                 ),
               ),
               onPressed: () {
-                createRoom();
+                setRoom();
               },
               child: const Text('Simpan'),
             ),

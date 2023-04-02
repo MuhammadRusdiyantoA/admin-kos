@@ -31,6 +31,8 @@ class _FormHelp extends State<FormHelp> {
         );
 
         Navigator.pop(context);
+
+        Navigator.pop(context);
       }
     } catch (exception) {
       showDialog(

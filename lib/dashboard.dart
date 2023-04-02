@@ -75,6 +75,7 @@ class Room extends StatelessWidget {
                 isAdmin: isAdmin,
                 invoice: invoice,
                 roomKey: roomKey,
+                type: type,
               ),
             ),
           );

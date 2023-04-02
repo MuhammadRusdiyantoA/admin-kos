@@ -16,6 +16,7 @@ class RoomDetail extends StatefulWidget {
   final bool isAdmin;
   final int invoice;
   final String roomKey;
+  final String type;
 
   const RoomDetail(
     this.roomImg,
@@ -29,6 +30,7 @@ class RoomDetail extends StatefulWidget {
     this.isAdmin = false,
     this.invoice = 0,
     this.roomKey = "",
+    this.type = "",
   });
 
   @override
@@ -46,7 +48,16 @@ class _RoomDetail extends State<RoomDetail> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const AddRoom(),
+        builder: (context) => AddRoom(formData: {
+          "key": widget.roomKey,
+          "type": widget.type,
+          "room_num": widget.roomNum,
+          "owner": widget.roomOwner,
+          "facilities": widget.facilities,
+          "specifications": widget.roomSpec,
+          "bath_spec": widget.bathSpec,
+          "invoice": widget.invoice
+        }),
       ),
     );
   }
@@ -63,12 +74,9 @@ class _RoomDetail extends State<RoomDetail> {
           ),
         );
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const HomeAdmin(),
-          ),
-        );
+        Navigator.pop(context);
+
+        Navigator.pop(context);
       }
     } catch (exception) {
       showDialog(
@@ -85,6 +93,7 @@ class _RoomDetail extends State<RoomDetail> {
   @override
   void initState() {
     super.initState();
+
     if (widget.roomOwner == curUser || widget.isAdmin) {
       setState(() {
         check = !check;
@@ -94,6 +103,8 @@ class _RoomDetail extends State<RoomDetail> {
 
   @override
   Widget build(BuildContext context) {
+    curUser = auth.currentUser!.uid;
+
     return Scaffold(
       body: SingleChildScrollView(
         physics: const ScrollPhysics(
@@ -171,7 +182,7 @@ class _RoomDetail extends State<RoomDetail> {
                                   color: Colors.white,
                                 ),
                                 onPressed: () {
-                                  Navigator.pop(context);
+                                  updateRoom();
                                 },
                               ),
                             ],
@@ -222,38 +233,64 @@ class _RoomDetail extends State<RoomDetail> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text('Penghuni'),
-                        widget.roomOwner == curUser
-                            ? FittedBox(
-                                child: RichText(
-                                  text: TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: curUser,
-                                        style: const TextStyle(
-                                          color: Colors.black87,
-                                          fontWeight: FontWeight.normal,
-                                          fontSize: 24,
-                                        ),
-                                      ),
-                                      const TextSpan(
-                                        text: '(You)',
-                                        style: TextStyle(
-                                          color: Colors.green,
-                                          fontWeight: FontWeight.normal,
-                                          fontSize: 24,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            : FittedBox(
+                        widget.roomOwner == "Kosong"
+                            ? const FittedBox(
                                 child: Text(
-                                  widget.roomOwner,
-                                  style: const TextStyle(
+                                  "Kosong",
+                                  style: TextStyle(
                                     fontSize: 24,
                                   ),
                                 ),
+                              )
+                            : StreamBuilder(
+                                stream: db
+                                    .collection('users')
+                                    .doc(widget.roomOwner)
+                                    .snapshots(),
+                                builder: (context, snapshot) {
+                                  if (snapshot.hasData) {
+                                    var data = snapshot.data!.data()
+                                        as Map<String, dynamic>;
+
+                                    return widget.roomOwner ==
+                                            auth.currentUser!.uid
+                                        ? FittedBox(
+                                            child: RichText(
+                                              text: TextSpan(
+                                                children: [
+                                                  TextSpan(
+                                                    text: data['username'],
+                                                    style: const TextStyle(
+                                                      color: Colors.black87,
+                                                      fontWeight:
+                                                          FontWeight.normal,
+                                                      fontSize: 24,
+                                                    ),
+                                                  ),
+                                                  const TextSpan(
+                                                    text: '(You)',
+                                                    style: TextStyle(
+                                                      color: Colors.green,
+                                                      fontWeight:
+                                                          FontWeight.normal,
+                                                      fontSize: 24,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          )
+                                        : FittedBox(
+                                            child: Text(
+                                              data['username'],
+                                              style: const TextStyle(
+                                                fontSize: 24,
+                                              ),
+                                            ),
+                                          );
+                                  }
+                                  return const Text("wait...");
+                                },
                               ),
                       ],
                     ),
