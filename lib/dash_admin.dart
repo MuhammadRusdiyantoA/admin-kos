@@ -1,3 +1,4 @@
+import 'package:admin_kos/notifications.dart';
 import 'package:admin_kos/room_detail.dart';
 import 'package:admin_kos/dashboard.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -32,47 +33,67 @@ class _DashAdmin extends State<DashAdmin> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                FittedBox(
-                  child: StreamBuilder(
-                    stream: db
-                        .collection('users')
-                        .doc(auth.currentUser?.uid)
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        var data =
-                            snapshot.data!.data() as Map<String, dynamic>;
+                Row(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    FittedBox(
+                      child: StreamBuilder(
+                        stream: db
+                            .collection('users')
+                            .doc(auth.currentUser?.uid)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            var data =
+                                snapshot.data!.data() as Map<String, dynamic>;
 
-                        return Text(
-                          'Halo, ${data["username"]}',
-                          textAlign: TextAlign.left,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
+                            return Text(
+                              'Halo, ${data["username"]}',
+                              textAlign: TextAlign.left,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                              ),
+                            );
+                          }
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        },
+                      ),
+                    ),
+                    // Row(
+                    //   children: const [
+                    //     Icon(
+                    //       Icons.location_on,
+                    //       color: Colors.white54,
+                    //     ),
+                    //     Text(
+                    //       'Surakarta, Indonesia',
+                    //       style: TextStyle(
+                    //         color: Colors.white54,
+                    //         fontSize: 16,
+                    //       ),
+                    //     )
+                    //   ],
+                    // ),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const NotifyPage(),
                           ),
                         );
-                      }
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    },
-                  ),
-                ),
-                Row(
-                  children: const [
-                    Icon(
-                      Icons.location_on,
-                      color: Colors.white54,
-                    ),
-                    Text(
-                      'Surakarta, Indonesia',
-                      style: TextStyle(
-                        color: Colors.white54,
-                        fontSize: 16,
+                      },
+                      icon: const Icon(
+                        Icons.notifications,
+                        color: Colors.white,
                       ),
-                    )
+                    ),
                   ],
-                ),
+                )
               ],
             ),
           ),

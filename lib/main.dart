@@ -8,10 +8,7 @@ import 'firebase_options.dart';
 import 'onboarding.dart';
 import 'home_user.dart';
 
-void main() async {
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+void main() {
   // FirebaseAuth.instance.createUserWithEmailAndPassword(
   //     email: 'admin.kostapp@gmail.com', password: 'kostapp1');
   // FirebaseFirestore.instance
@@ -32,12 +29,30 @@ class Root extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MediaQuery(
-      data: MediaQueryData(),
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: Splash(),
+    return FutureBuilder(
+      future: Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
       ),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          return const MediaQuery(
+            data: MediaQueryData(),
+            child: MaterialApp(
+              debugShowCheckedModeBanner: false,
+              home: Splash(),
+            ),
+          );
+        }
+        return const MediaQuery(
+          data: MediaQueryData(),
+          child: MaterialApp(
+            debugShowCheckedModeBanner: false,
+            home: Scaffold(
+              backgroundColor: Colors.indigo,
+            ),
+          ),
+        );
+      },
     );
   }
 }

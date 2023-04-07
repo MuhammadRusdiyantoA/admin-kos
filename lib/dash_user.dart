@@ -1,3 +1,4 @@
+import 'package:admin_kos/notifications.dart';
 import 'package:admin_kos/room_detail.dart';
 import 'package:admin_kos/dashboard.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -16,6 +17,9 @@ class _DashUser extends State<DashUser> {
   var auth = FirebaseAuth.instance;
 
   bool visibility = false;
+  bool roomlessUser = false;
+
+  String getBy = "";
 
   @override
   Widget build(BuildContext context) {
@@ -46,59 +50,71 @@ class _DashUser extends State<DashUser> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.max,
                   children: [
-                    FittedBox(
-                      child: StreamBuilder(
-                        stream: db
-                            .collection('users')
-                            .doc(auth.currentUser?.uid)
-                            .snapshots(),
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            var data =
-                                snapshot.data!.data() as Map<String, dynamic>;
-
-                            return Column(
-                              children: [
-                                Text(
-                                  'Halo, ${data["username"]}',
-                                  textAlign: TextAlign.left,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 24,
-                                  ),
-                                ),
-                              ],
-                            );
-                          }
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        },
-                      ),
-                    ),
                     Row(
-                      children: const [
-                        Icon(
-                          Icons.location_on,
-                          color: Colors.white54,
-                        ),
-                        Text(
-                          'Surakarta, Indonesia',
-                          style: TextStyle(
-                            color: Colors.white54,
-                            fontSize: 16,
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        FittedBox(
+                          child: StreamBuilder(
+                            stream: db
+                                .collection('users')
+                                .doc(auth.currentUser?.uid)
+                                .snapshots(),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+                                var data = snapshot.data!.data()
+                                    as Map<String, dynamic>;
+
+                                return Column(
+                                  children: [
+                                    Text(
+                                      'Halo, ${data["username"]}',
+                                      textAlign: TextAlign.left,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 24,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            },
                           ),
-                        )
+                        ),
+                        // Row(
+                        //   children: const [
+                        //     Icon(
+                        //       Icons.location_on,
+                        //       color: Colors.white54,
+                        //     ),
+                        //     Text(
+                        //       'Surakarta, Indonesia',
+                        //       style: TextStyle(
+                        //         color: Colors.white54,
+                        //         fontSize: 16,
+                        //       ),
+                        //     )
+                        //   ],
+                        // ),
+                        IconButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const NotifyPage(),
+                              ),
+                            );
+                          },
+                          icon: const Icon(
+                            Icons.notifications,
+                            color: Colors.white,
+                          ),
+                        ),
                       ],
                     ),
-                    // IconButton(
-                    //   onPressed: () {},
-                    //   icon: const Icon(
-                    //     Icons.notifications,
-                    //     color: Colors.white,
-                    //   ),
-                    // ),
-
                     Container(
                       margin: const EdgeInsets.only(top: 24),
                       padding: const EdgeInsets.only(top: 24),
@@ -114,12 +130,50 @@ class _DashUser extends State<DashUser> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         mainAxisSize: MainAxisSize.max,
                         children: [
-                          Text(
-                            visibility ? 'Rp. 69.420' : 'Rp. 0',
-                            style: TextStyle(
-                              color: visibility ? Colors.white : Colors.white38,
-                              fontSize: 24,
-                            ),
+                          StreamBuilder(
+                            stream: db
+                                .collection('rooms')
+                                .where('owner',
+                                    isEqualTo: auth.currentUser!.uid)
+                                .snapshots(),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+                                var data = snapshot.data!.docs
+                                    .map((e) => e.data())
+                                    .toList();
+
+                                if (data.isEmpty) {
+                                  return Text(
+                                    visibility ? 'Rp. 0' : 'Rp. 0',
+                                    style: TextStyle(
+                                      color: visibility
+                                          ? Colors.white
+                                          : Colors.white38,
+                                      fontSize: 24,
+                                    ),
+                                  );
+                                }
+
+                                return Text(
+                                  visibility
+                                      ? 'Rp. ${data[0]["invoice"]}'
+                                      : 'Rp. 0',
+                                  style: TextStyle(
+                                    color: visibility
+                                        ? Colors.white
+                                        : Colors.white38,
+                                    fontSize: 24,
+                                  ),
+                                );
+                              }
+                              return const Text(
+                                'Mohon tunggu...',
+                                style: TextStyle(
+                                  color: Colors.white38,
+                                  fontSize: 24,
+                                ),
+                              );
+                            },
                           ),
                           TextButton(
                             style: ButtonStyle(
@@ -178,137 +232,161 @@ class _DashUser extends State<DashUser> {
             ],
           ),
           Container(
-            margin: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Kamarmu',
-                  textAlign: TextAlign.left,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.normal,
-                  ),
-                ),
-                TextButton(
-                  style: const ButtonStyle(
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    foregroundColor: MaterialStatePropertyAll(Colors.black),
-                    padding: MaterialStatePropertyAll(EdgeInsets.zero),
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const RoomDetail(
-                          AssetImage('assets/images/kamar_1.jpg'),
-                          16,
-                          'Terisi',
-                          'Muhammad Sumbul bin Abdul Jalil',
-                          [
-                            'TV',
-                            'Lemari',
-                            'Kursi',
-                            'Kasur',
-                            'AC',
-                            'Meja Belajar'
-                          ],
-                          [
-                            '5 x 4 Meter',
-                            'Termasuk Listrik',
-                          ],
-                          [
-                            'KM. dalam',
-                            'Kloset duduk',
-                            'Ember mandi',
-                            'Gayung mandi'
-                          ],
+            margin: const EdgeInsets.only(top: 24, right: 16, left: 16),
+            child: StreamBuilder(
+              stream: db
+                  .collection('rooms')
+                  .where("owner", isEqualTo: auth.currentUser!.uid)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  var data = snapshot.data!.docs.map((e) => e.data()).toList();
+
+                  if (data.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        "Kamu belum punya kamar, pilih kamarmu sekarang juga!",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.normal,
                         ),
                       ),
                     );
-                  },
-                  child: Column(
+                  }
+
+                  for (int i = 0; i < data.length; i++) {
+                    data[i].addAll({"key": snapshot.data!.docs[i].id});
+                  }
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        padding: const EdgeInsets.all(6),
-                        height: MediaQuery.of(context).size.height * 0.2,
-                        width: double.infinity,
-                        alignment: Alignment.topLeft,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          image: const DecorationImage(
-                            image: AssetImage('assets/images/kamar_1.jpg'),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 6),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(64),
-                                color: Colors.amber,
-                              ),
-                              child: const Text(
-                                'Premium',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ],
+                      const Text(
+                        'Kamarmu',
+                        textAlign: TextAlign.left,
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.normal,
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.max,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              children: const [
-                                Text(
-                                  'Nomor Kamar',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.black38,
-                                  ),
-                                ),
-                                Text(
-                                  'Kamar 16',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+                      TextButton(
+                        style: const ButtonStyle(
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          foregroundColor:
+                              MaterialStatePropertyAll(Colors.black),
+                          padding: MaterialStatePropertyAll(EdgeInsets.zero),
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RoomDetail(
+                                AssetImage(data[0]['image']),
+                                data[0]['room_num'],
+                                data[0]['status'],
+                                data[0]['owner'],
+                                data[0]['facilities'],
+                                data[0]['specifications'],
+                                data[0]['bath_spec'],
+                                invoice: data[0]['invoice'],
+                                roomKey: data[0]['key'],
+                                type: data[0]['type'],
+                              ),
                             ),
-                            Column(
-                              children: const [
-                                Text(
-                                  'Tipe Kamar',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.black38,
-                                  ),
+                          );
+                        },
+                        child: Column(
+                          children: [
+                            Container(
+                              margin: const EdgeInsets.symmetric(vertical: 8),
+                              padding: const EdgeInsets.all(6),
+                              height: MediaQuery.of(context).size.height * 0.2,
+                              width: double.infinity,
+                              alignment: Alignment.topLeft,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8),
+                                image: DecorationImage(
+                                  image: AssetImage(data[0]['image']),
+                                  fit: BoxFit.cover,
                                 ),
-                                Text(
-                                  'Premium',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(64),
+                                      color: data[0]['type'] == "Premium"
+                                          ? Colors.amber
+                                          : Colors.green,
+                                    ),
+                                    child: Text(
+                                      data[0]['type'],
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    children: [
+                                      const Text(
+                                        'Nomor Kamar',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.black38,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Kamar ${data[0]["room_num"]}',
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    children: [
+                                      const Text(
+                                        'Tipe Kamar',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.black38,
+                                        ),
+                                      ),
+                                      Text(
+                                        data[0]['type'],
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
                       ),
                     ],
-                  ),
-                ),
-              ],
+                  );
+                }
+                return const CircularProgressIndicator();
+              },
             ),
           ),
           Container(
@@ -321,152 +399,81 @@ class _DashUser extends State<DashUser> {
                   child: Row(
                     mainAxisSize: MainAxisSize.max,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
+                    children: [
                       Text(
-                        'Kamar Lainnya',
-                        style: TextStyle(
+                        roomlessUser ? 'Pilih Kamarmu' : 'Kamar Lainnya',
+                        style: const TextStyle(
                           fontSize: 24,
                         ),
                       ),
-                      Text('X Jenis Kamar')
+                      DropdownButton(
+                        value: getBy,
+                        items: const [
+                          DropdownMenuItem(
+                            value: "",
+                            child: Text("Jenis kamar"),
+                          ),
+                          DropdownMenuItem(
+                            value: "Standar",
+                            child: Text("Standar"),
+                          ),
+                          DropdownMenuItem(
+                            value: "Premium",
+                            child: Text("Premium"),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            getBy = value!;
+                          });
+                        },
+                      ),
                     ],
                   ),
                 ),
-                Flexible(
-                  child: GridView.count(
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    crossAxisSpacing: 24,
-                    crossAxisCount: 2,
-                    children: const [
-                      Room(
-                          AssetImage('assets/images/kamar_2.jpg'),
-                          "Premium",
-                          1,
-                          "Terisi",
-                          [
-                            'Kasur',
-                            'Lemari',
-                            'Meja Belajar',
-                            'Kursi',
-                            'AC',
-                            'TV',
-                            'Bantal',
-                            'Guling'
-                          ],
-                          [
-                            '5x4 meter',
-                            'Termasuk Listrik',
-                            'Termasuk Katering'
-                          ],
-                          [
-                            'KM. dalam',
-                            'Kloset duduk',
-                            'Shower',
-                            'Air Hangat',
-                          ],
-                          roomOwner: "Finna Nasywa"),
-                      Room(
-                          AssetImage('assets/images/kamar_1.jpg'),
-                          "Premium",
-                          2,
-                          "Terisi",
-                          [
-                            'Kasur',
-                            'Lemari',
-                            'Meja Belajar',
-                            'Kursi',
-                            'AC',
-                            'TV',
-                            'Bantal',
-                            'Guling'
-                          ],
-                          [
-                            '6x4 meter',
-                            'Termasuk Listrik',
-                            'Termasuk Laundry',
-                          ],
-                          [
-                            'KM. dalam',
-                            'Kloset duduk',
-                            'Shower',
-                          ],
-                          roomOwner: "Nizar Ali"),
-                      Room(
-                        AssetImage('assets/images/kamar_3.jpg'),
-                        "Standar",
-                        3,
-                        "Kosong",
-                        [
-                          'Kasur',
-                          'Lemari',
-                          'Meja Belajar',
-                          'Kursi',
-                          'Bantal',
-                          'Guling'
+                StreamBuilder(
+                  stream: db
+                      .collection('rooms')
+                      .where("owner", isNotEqualTo: auth.currentUser!.uid)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      var data =
+                          snapshot.data!.docs.map((e) => e.data()).toList();
+
+                      if (data.isEmpty) {
+                        return Row();
+                      }
+
+                      for (int i = 0; i < data.length; i++) {
+                        data[i].addAll({"key": snapshot.data!.docs[i].id});
+                      }
+
+                      return GridView.count(
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        mainAxisSpacing: 24,
+                        crossAxisSpacing: 24,
+                        crossAxisCount: 2,
+                        children: [
+                          for (var i = 0; i < data.length; i++)
+                            Room(
+                              AssetImage(data[i]['image']),
+                              data[i]['type'],
+                              data[i]['room_num'],
+                              data[i]['status'],
+                              data[i]['facilities'],
+                              data[i]['specifications'],
+                              data[i]['bath_spec'],
+                              invoice: data[i]['invoice'],
+                              roomOwner: data[i]['owner'],
+                              roomKey: data[i]['key'],
+                            )
                         ],
-                        [
-                          '4x3 meter',
-                          'Termasuk Listrik',
-                        ],
-                        [
-                          'KM. dalam',
-                          'Kloset jongkok',
-                          'Ember mandi',
-                          'Gayung mandi'
-                        ],
-                      ),
-                      Room(
-                          AssetImage('assets/images/kamar_2.jpg'),
-                          "Standar",
-                          4,
-                          "Terisi",
-                          [
-                            'Kasur',
-                            'Lemari',
-                            'Meja Belajar',
-                            'Kursi',
-                            'Bantal',
-                            'Guling'
-                          ],
-                          [
-                            '4x3 meter',
-                            'Termasuk Listrik',
-                            'Termasuk Laundry',
-                          ],
-                          [
-                            'KM. dalam',
-                            'Kloset duduk',
-                            'Ember mandi',
-                            'Gayung mandi'
-                          ],
-                          roomOwner: "Naswa Bila"),
-                      Room(
-                        AssetImage('assets/images/kamar_3.jpg'),
-                        "Standar",
-                        5,
-                        "Kosong",
-                        [
-                          'Kasur',
-                          'Lemari',
-                          'Meja Belajar',
-                          'Kursi',
-                          'Bantal',
-                          'Guling'
-                        ],
-                        [
-                          '4x3 meter',
-                          'Termasuk Listrik',
-                        ],
-                        [
-                          'KM. dalam',
-                          'Kloset jongkok',
-                          'Ember mandi',
-                          'Gayung mandi'
-                        ],
-                      ),
-                    ],
-                  ),
+                      );
+                    }
+                    return const CircularProgressIndicator();
+                  },
                 ),
               ],
             ),

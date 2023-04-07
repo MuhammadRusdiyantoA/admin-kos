@@ -94,7 +94,7 @@ class _RoomDetail extends State<RoomDetail> {
   void initState() {
     super.initState();
 
-    if (widget.roomOwner == curUser || widget.isAdmin) {
+    if (widget.roomOwner == auth.currentUser!.uid || widget.isAdmin) {
       setState(() {
         check = !check;
       });
