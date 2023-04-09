@@ -142,7 +142,7 @@ class _FormHelp extends State<FormHelp> {
                             Flexible(
                               child: Text(
                                 widget.data.isEmpty
-                                    ? "Add New Policy"
+                                    ? "Tambah Kebijakan Baru"
                                     : "Edit ${widget.data['title']}",
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
@@ -200,7 +200,17 @@ class _FormHelp extends State<FormHelp> {
                       IconButton(
                         color: Colors.white,
                         onPressed: () {
-                          setPolicy();
+                          if (titleController.text.isEmpty ||
+                              contentController.text.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Mohon isi semua kolom!'),
+                                backgroundColor: Colors.indigo,
+                              ),
+                            );
+                          } else {
+                            setPolicy();
+                          }
                         },
                         icon: Icon(
                           widget.data.isEmpty ? Icons.add : Icons.edit,

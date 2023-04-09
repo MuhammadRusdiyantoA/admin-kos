@@ -54,7 +54,7 @@ class _DashUser extends State<DashUser> {
                       mainAxisSize: MainAxisSize.max,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        FittedBox(
+                        Flexible(
                           child: StreamBuilder(
                             stream: db
                                 .collection('users')
@@ -65,17 +65,13 @@ class _DashUser extends State<DashUser> {
                                 var data = snapshot.data!.data()
                                     as Map<String, dynamic>;
 
-                                return Column(
-                                  children: [
-                                    Text(
-                                      'Halo, ${data["username"]}',
-                                      textAlign: TextAlign.left,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 24,
-                                      ),
-                                    ),
-                                  ],
+                                return Text(
+                                  'Halo, ${data["username"]}',
+                                  textAlign: TextAlign.left,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                  ),
                                 );
                               }
                               return const Center(
@@ -99,20 +95,102 @@ class _DashUser extends State<DashUser> {
                         //     )
                         //   ],
                         // ),
-                        IconButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const NotifyPage(),
-                              ),
+                        StreamBuilder(
+                          stream: db
+                              .collection('notifications')
+                              .orderBy('date_sent', descending: true)
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasData) {
+                              var notifyAmount = snapshot.data!.docs
+                                  .map((e) => e.data())
+                                  .where((element) =>
+                                      element['to'] == auth.currentUser!.uid)
+                                  .where(
+                                      (element) => element['isRead'] == false)
+                                  .toList()
+                                  .length;
+
+                              if (notifyAmount > 0) {
+                                return Stack(
+                                  children: [
+                                    IconButton(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const NotifyPage(),
+                                          ),
+                                        );
+                                      },
+                                      icon: const Icon(
+                                        Icons.notifications,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    Positioned(
+                                      right: 0,
+                                      top: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(5),
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.red,
+                                        ),
+                                        child: Text(
+                                          notifyAmount.toString(),
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                              color: Colors.white),
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                );
+                              } else {
+                                return Stack(
+                                  children: [
+                                    IconButton(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const NotifyPage(),
+                                          ),
+                                        );
+                                      },
+                                      icon: const Icon(
+                                        Icons.notifications,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }
+                            }
+                            return Stack(
+                              children: [
+                                IconButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const NotifyPage(),
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(
+                                    Icons.notifications,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
                             );
                           },
-                          icon: const Icon(
-                            Icons.notifications,
-                            color: Colors.white,
-                          ),
-                        ),
+                        )
                       ],
                     ),
                     Container(

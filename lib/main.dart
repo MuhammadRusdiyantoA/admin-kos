@@ -7,6 +7,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'onboarding.dart';
 import 'home_user.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 void main() {
   // FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -104,6 +105,9 @@ class _Splash extends State<Splash> {
   @override
   void initState() {
     super.initState();
+
+    timeago.setLocaleMessages('id', timeago.IdMessages());
+    timeago.setDefaultLocale('id');
 
     isLoggedIn();
   }

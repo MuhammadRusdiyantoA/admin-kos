@@ -789,7 +789,49 @@ class UnownedRoom extends StatefulWidget {
 }
 
 class _UnownedRoom extends State<UnownedRoom> {
+  var db = FirebaseFirestore.instance;
+  var auth = FirebaseAuth.instance;
+
   bool booked = false;
+
+  void bookRoom() async {
+    try {
+      var data =
+          await db.collection('users').where('role', isEqualTo: 'admin').get();
+      var adminID = data.docs[0].id;
+
+      await db.collection('notifications').add({
+        "from": auth.currentUser!.uid,
+        "to": adminID,
+        "type": "Booking",
+        "content":
+            "%name% telah memesan booking untuk kamar ${widget.roomNum}.",
+        "isRead": false,
+        "date_sent": DateTime.now()
+      });
+
+      if (mounted) {
+        setState(() {
+          booked = !booked;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Kamar berhasil di-booking!'),
+            backgroundColor: Colors.indigo,
+          ),
+        );
+      }
+    } catch (exception) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: Text('Something went wrong! $exception'),
+          );
+        },
+      );
+    }
+  }
 
   List<Color?> getBookingColor() {
     if (widget.roomStat == "Kosong" && !booked) {
@@ -944,15 +986,7 @@ class _UnownedRoom extends State<UnownedRoom> {
                         ),
                         onPressed: (widget.roomStat == "Kosong" && !booked)
                             ? () {
-                                setState(() {
-                                  booked = !booked;
-                                });
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Kamar berhasil di-booking!'),
-                                    backgroundColor: Colors.indigo,
-                                  ),
-                                );
+                                bookRoom();
                               }
                             : null,
                         child: const Text('Booking'),
