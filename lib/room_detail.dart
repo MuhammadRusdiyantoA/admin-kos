@@ -308,6 +308,7 @@ class _RoomDetail extends State<RoomDetail> {
                         widget.facilities,
                         widget.roomSpec,
                         widget.bathSpec,
+                        widget.roomKey,
                         isAdmin: widget.isAdmin,
                         invoice: widget.invoice,
                       )
@@ -350,9 +351,10 @@ class OwnedRoom extends StatefulWidget {
   final List<dynamic> bathSpec;
   final bool isAdmin;
   final int invoice;
+  final String roomKey;
 
   const OwnedRoom(this.roomImg, this.roomNum, this.roomStat, this.roomOwner,
-      this.facilities, this.roomSpec, this.bathSpec,
+      this.facilities, this.roomSpec, this.bathSpec, this.roomKey,
       {super.key, this.isAdmin = false, this.invoice = 0});
 
   @override
@@ -360,9 +362,42 @@ class OwnedRoom extends StatefulWidget {
 }
 
 class _OwnedRoom extends State<OwnedRoom> {
+  var db = FirebaseFirestore.instance;
+  var auth = FirebaseAuth.instance;
+
   bool submitable = false;
   bool submitted = false;
+  bool invoiceSubmitted = false;
+
   TextEditingController detailController = TextEditingController();
+  TextEditingController invoiceController = TextEditingController();
+
+  void sendInvoice() async {
+    setState(() {
+      invoiceSubmitted = true;
+    });
+
+    await db.collection('notifications').add({
+      "from": auth.currentUser!.uid,
+      "to": widget.roomOwner,
+      "type": "Tagihan",
+      "content":
+          "Anda mendapatkan tagihan biaya kamar sebanyak Rp. ${invoiceController.text}.",
+      "isRead": false,
+      "date_sent": DateTime.now()
+    });
+
+    await db.collection('rooms').doc(widget.roomKey).update({
+      "invoice": widget.invoice + int.parse(invoiceController.text),
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Tagihan berhasil dikirimkan!'),
+        backgroundColor: Colors.indigo,
+      ));
+    }
+  }
 
   bool anySelected() {
     for (int i = 0; i < facilitiesCheck.length; i++) {
@@ -462,6 +497,7 @@ class _OwnedRoom extends State<OwnedRoom> {
   @override
   Widget build(BuildContext context) {
     var screenSize = MediaQuery.of(context).size;
+    invoiceController.text = 0.toString();
 
     return Container(
       width: MediaQuery.of(context).size.width,
@@ -571,10 +607,14 @@ class _OwnedRoom extends State<OwnedRoom> {
                                             MainAxisAlignment.spaceBetween,
                                         children: [
                                           const Text('Tagihan'),
-                                          Text(
-                                            '${widget.invoice}',
-                                            style: const TextStyle(
-                                              color: Colors.red,
+                                          SizedBox(
+                                            width: screenSize.width * 0.6,
+                                            child: TextField(
+                                              controller: invoiceController,
+                                              textAlign: TextAlign.right,
+                                              style: const TextStyle(
+                                                color: Colors.red,
+                                              ),
                                             ),
                                           ),
                                         ],
@@ -594,11 +634,15 @@ class _OwnedRoom extends State<OwnedRoom> {
                                               ),
                                             ),
                                             backgroundColor:
-                                                const MaterialStatePropertyAll(
-                                                    Colors.indigo),
+                                                MaterialStatePropertyAll(
+                                              !invoiceSubmitted
+                                                  ? Colors.indigo
+                                                  : Colors.indigo[100],
+                                            ),
                                             foregroundColor:
                                                 const MaterialStatePropertyAll(
-                                                    Colors.white),
+                                              Colors.white,
+                                            ),
                                             padding: MaterialStatePropertyAll(
                                               EdgeInsets.symmetric(
                                                   horizontal:
@@ -608,8 +652,12 @@ class _OwnedRoom extends State<OwnedRoom> {
                                                           0.2),
                                             ),
                                           ),
-                                          onPressed: () {},
-                                          child: const Text('Minta Tagihan'),
+                                          onPressed: () {
+                                            sendInvoice();
+                                          },
+                                          child: !invoiceSubmitted
+                                              ? const Text('Minta Tagihan')
+                                              : const Text('Tagihan terkirim!'),
                                         ),
                                       )
                                     ],
