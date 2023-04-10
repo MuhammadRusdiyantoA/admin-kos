@@ -373,8 +373,14 @@ class _OwnedRoom extends State<OwnedRoom> {
   TextEditingController invoiceController = TextEditingController();
 
   void sendInvoice() async {
+    int newInvoice = int.parse(invoiceController.text);
+
     setState(() {
       invoiceSubmitted = true;
+    });
+
+    await db.collection('rooms').doc(widget.roomKey).update({
+      "invoice": widget.invoice + newInvoice,
     });
 
     await db.collection('notifications').add({
@@ -382,13 +388,9 @@ class _OwnedRoom extends State<OwnedRoom> {
       "to": widget.roomOwner,
       "type": "Tagihan",
       "content":
-          "Anda mendapatkan tagihan biaya kamar sebanyak Rp. ${invoiceController.text}.",
+          "Anda mendapatkan tagihan biaya kamar sebanyak Rp. $newInvoice.",
       "isRead": false,
       "date_sent": DateTime.now()
-    });
-
-    await db.collection('rooms').doc(widget.roomKey).update({
-      "invoice": widget.invoice + int.parse(invoiceController.text),
     });
 
     if (mounted) {
