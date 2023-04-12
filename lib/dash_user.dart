@@ -510,14 +510,21 @@ class _DashUser extends State<DashUser> {
                   ),
                 ),
                 StreamBuilder(
-                  stream: db
-                      .collection('rooms')
-                      .where("owner", isNotEqualTo: auth.currentUser!.uid)
-                      .snapshots(),
+                  stream: getBy.isEmpty
+                      ? db.collection('rooms').snapshots()
+                      : db
+                          .collection('rooms')
+                          .orderBy('type',
+                              descending: getBy == "Premium" ? false : true)
+                          .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
-                      var data =
-                          snapshot.data!.docs.map((e) => e.data()).toList();
+                      var currentUserId = auth.currentUser!.uid;
+                      var data = snapshot.data!.docs
+                          .map((e) => e.data())
+                          .toList()
+                          .where((element) => element['owner'] != currentUserId)
+                          .toList();
 
                       if (data.isEmpty) {
                         return Row();
